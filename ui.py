@@ -1,8 +1,8 @@
 # coding=utf-8
 import sys
 
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QMenu, QAction, qApp, QTextEdit, QFileDialog
+from PyQt5.QtGui import QIcon, QKeySequence
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QMenu, QAction, qApp, QTextEdit, QFileDialog, QShortcut
 
 
 class MainFace(QMainWindow):
@@ -11,6 +11,9 @@ class MainFace(QMainWindow):
     def __init__(self):
         super().__init__()
         self.initUI()
+
+        # # 快捷键定义
+        # QShortcut(QKeySequence(self.tr("Ctrl+S")), self, self.close)
 
     def initUI(self):
         """初始化界面"""
@@ -25,8 +28,9 @@ class MainFace(QMainWindow):
         self.help_menu = menu_bar.addMenu("帮助")
 
         # file_menu菜单
-        file_menu_items = {'new': ['新建', ],
-                           'open': ['打开', self.openfile_dialog(), 'Ctrl+O', 'Open file', 'open.png'],
+        file_menu_items = {'new': ['新建', self.new_dialog, 'Ctrl+N', 'New'],
+                           'open': ['打开', self.openfile_dialog, 'Ctrl+O', 'Open file', 'open.png'],
+                           'save': ['保存', self.savefile_dialog, 'Ctrl+S', 'Save file'],
                            'save_as': [],
                            'save_with': [],
                            'quit': ['退出', qApp.exit, 'Ctrl+Q', 'Exit application', 'exit.png']}
@@ -39,8 +43,11 @@ class MainFace(QMainWindow):
         # 打开
         self.openfile(file_menu_items['open'])
 
-        # # 新建
-        # self.new(file_menu_items['new'])
+        # 新建
+        self.new(file_menu_items['new'])
+
+        # 保存
+        self.savefile(file_menu_items['save'])
 
         # edit_menu菜单
         edit_menu_list = ['一键格式化', '章节名格式化', '清除空白行', '屏蔽字替换',
@@ -90,11 +97,14 @@ class MainFace(QMainWindow):
 
     def new(self, params):
         """新建文件"""
+        new_act = self.action(*params)
+        self.file_menu.addAction(new_act)
+
+    def new_dialog(self):
+        """新建文件会话"""
         self.text_edit = QTextEdit()  # 创建一个文本编辑区
         self.setCentralWidget(self.text_edit)  # 并将其放在窗口中央
-
-        fw = open('未命名.txt', 'w', encoding='utf-8')
-        fw.close()
+        self.setWindowTitle('未命名.txt')
 
     def openfile(self, params):
         """打开文件"""
@@ -106,11 +116,24 @@ class MainFace(QMainWindow):
         self.text_edit = QTextEdit()  # 创建一个文本编辑区
         self.setCentralWidget(self.text_edit)  # 并将其放在窗口中央
 
-        fname = QFileDialog.getOpenFileName(self, 'Open file', '/home')  # 打开文件筛选器选择文件
+        fname = QFileDialog.getOpenFileName(self, 'Open file', '/home', "Txt files(*.txt)")  # 打开文件筛选器选择文件
         # print(fname)
         if fname[0]:
             with open(fname[0], 'r', encoding='utf-8') as fr:
                 self.text_edit.setText(fr.read())
+
+    def savefile(self, params):
+        """保存文件"""
+        save_act = self.action(*params)
+        self.file_menu.addAction(save_act)
+
+    def savefile_dialog(self):
+        """保存文件对话"""
+        fname = QFileDialog.getSaveFileName(self, 'Save file', '/home')
+        print(fname)
+        if fname[0]:
+            with open(fname[0] + '.txt', 'w', encoding='utf-8', errors='ignore') as fw:
+                fw.write(self.text_edit.toPlainText())
 
     def quit(self, params):
         """退出程序"""
