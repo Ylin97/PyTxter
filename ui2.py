@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QMenu, QAction, 
 
 # Global variable
 file_path = None
+file_name = None
 
 
 class MainWindow(QMainWindow):
@@ -16,17 +17,33 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
         self.menu = self.menuBar()                  # 创建一个菜单栏
         self.file_menu = self.menu.addMenu('文件')   # 创建文件菜单
-        self.help_menu = self.menu.addMenu('帮助')   # 创建帮助菜单
         self.edit_menu = self.menu.addMenu('编辑')   # 创建编辑菜单
-        self.text = QPlainTextEdit()                # 定义一个文本编辑器
+        self.help_menu = self.menu.addMenu('帮助')   # 创建帮助菜单
         self.initUI()
+
+    def closeEvent(self, a0) -> None:
+        """关闭事件"""
+        if not self.text.document().isModified():
+            return
+        answer = QMessageBox.question(window, '退出程序', '关闭之前是否保存文件',
+                                      QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
+                                      )
+        # print(answer)
+        if answer & QMessageBox.Save:
+            self.save_dialog()
+        elif answer & QMessageBox.Cancel:
+            a0.ignore()
+
+    # def quitEvent(self, ):
 
     def initUI(self):
         """初始化主界面"""
 
         # 初始化主界面
         self.setMinimumSize(800, 600)
+        self.text = QPlainTextEdit()   # 定义一个文本编辑器
         self.setCentralWidget(self.text)
+        self.setWindowTitle('未命名文件.txt')
 
         # 菜单项
         self.create_file_menu()
@@ -44,18 +61,40 @@ class MainWindow(QMainWindow):
 
     def create_file_menu(self):
         """创建文件菜单"""
+        self.file_new()
         self.open_file()
         self.save()
         self.save_as()
         self.quit()
 
-    # 打开
+    def file_new_dialog(self):
+        """新建文件会话"""
+        # print('新建文件')
+        # self.close()
+        # self.initUI()
+        global file_path
+        self.setWindowTitle('未命名文件.txt')
+        file_path = '.'
+        self.save_dialog()
+
+    def file_new(self):
+        """新建文件选项"""
+        self.new_action = QAction('新建')
+        self.new_action.setShortcut(QKeySequence.New)
+        self.new_action.triggered.connect(self.file_new_dialog)
+        self.file_menu.addAction(self.new_action)
+        self.file_menu.addSeparator()
+
     def open_file_dialog(self):
         """打开文件会话"""
         global file_path
-        path = QFileDialog.getOpenFileName(window, 'open')[0]
+        global file_name
+        path = QFileDialog.getOpenFileName(self, 'open')[0]
+        file_name = str(path).split('/')[-1]
         if path:
-            self.text.setPlainText(open(path, 'r', encoding='utf-8').read())
+            with open(path, 'r', encoding='utf-8') as fr:
+                text = fr.read()
+            self.text.setPlainText(text)
             file_path = path
 
     def open_file(self):
@@ -75,6 +114,7 @@ class MainWindow(QMainWindow):
             with open(file_path, 'w', encoding='utf-8') as fw:
                 fw.write(self.text.toPlainText())
             self.text.document().setModified(False)
+        print(f'文件: {file_path}\t保存成功！')
 
     def save(self):
         """保存文件选项"""
