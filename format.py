@@ -40,6 +40,11 @@ def clean_line(lines: list)->list:
     return [line for line in lines if line.strip()]
 
 
+def sub_punctuation(text: str)->str:
+    """中英标点纠正"""
+    pass
+
+
 if __name__ == "__main__":
     s = "第一章 开始  这是一个测试，测试正则表达式是否正确。第二章关于 开始位置匹配是否正确，正确就放回一个对象。"
     lines = chapter_name_normalize(s.split('\n'))

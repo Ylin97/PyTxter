@@ -70,6 +70,8 @@ class MainWindow(QMainWindow):
         self.open_file()
         self.save()
         self.save_as()
+        self.convert2utf8()
+        self.convert2utf8bom()
         self.quit()
 
     def file_new_dialog(self):
@@ -173,6 +175,29 @@ class MainWindow(QMainWindow):
         self.file_menu.addAction(self.save_as_action)
         self.file_menu.addSeparator()
 
+    def convert2utf8_dialog(self):
+        """以 utf-8 编码保存会话"""
+        print('以 utf-8 编码保存')
+
+    def convert2utf8(self):
+        """以 utf-8 编码保存"""
+        self.conver2utf8_action = QAction('以 utf-8 编码保存')
+        self.conver2utf8_action.triggered.connect(self.convert2utf8_dialog)
+        self.file_menu.addAction(self.conver2utf8_action)
+        self.file_menu.addSeparator()
+
+    def convert2utf8bom_dialog(self):
+        """以 utf-8 with BOM 编码保存会话"""
+        print('以 utf-8 with BOM 编码保存会话')
+
+    def convert2utf8bom(self):
+        """以 utf-8 with BOM 编码保存"""
+        self.convert2utf8bom_action = QAction("以 utf-8 with bom 编码保存")
+        self.convert2utf8bom_action.triggered.connect(self.convert2utf8bom_dialog)
+        self.file_menu.addAction(self.convert2utf8bom_action)
+        self.file_menu.addSeparator()
+
+
     # 退出
     def quit(self):
         """退出选项"""
@@ -195,8 +220,6 @@ class MainWindow(QMainWindow):
         self.clean_space_line()
         self.ban_char_substitute()
         self.punctuation_correct()
-        self.convert2utf8()
-        self.convert2utf8bom()
         self.find()
         self.replace()
 
@@ -270,34 +293,13 @@ class MainWindow(QMainWindow):
     def punctuation_correct_dialog(self):
         """中英标点纠正会话"""
         print('中英标点纠正')
+        self.text.setPlainText(sub_punctuation(self.text.toPlainText()))
 
     def punctuation_correct(self):
         """中英标点纠正"""
         self.punc_correct_action = QAction("中英标点纠正")
         self.punc_correct_action.triggered.connect(self.punctuation_correct_dialog)
         self.edit_menu.addAction(self.punc_correct_action)
-        self.edit_menu.addSeparator()
-
-    def convert2utf8_dialog(self):
-        """转换编码为 utf-8 会话"""
-        print('转换编码为 utf-8')
-
-    def convert2utf8(self):
-        """转换编码为 utf-8"""
-        self.conver2utf8_action = QAction('转换编码为 utf-8')
-        self.conver2utf8_action.triggered.connect(self.convert2utf8_dialog)
-        self.edit_menu.addAction(self.conver2utf8_action)
-        self.edit_menu.addSeparator()
-
-    def convert2utf8bom_dialog(self):
-        """转换编码为 utf-8 with BOM 会话"""
-        print('转换编码为 utf-8 with bom')
-
-    def convert2utf8bom(self):
-        """转换编码为 utf-8 with BOM"""
-        self.convert2utf8bom_action = QAction("转换编码为 utf-8 with bom")
-        self.convert2utf8bom_action.triggered.connect(self.convert2utf8bom_dialog)
-        self.edit_menu.addAction(self.convert2utf8bom_action)
         self.edit_menu.addSeparator()
 
     def find_dialog(self):
