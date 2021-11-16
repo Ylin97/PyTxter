@@ -13,7 +13,8 @@ def chapter_name_normalize(lines: list)->list:
             p = 0
             for start, end in positions:
                 parts.append(line[p:start])
-                chapter_name = ('' if start == 0 else '\n\n') + line[start:end].strip()
+                # chapter_name = ('' if start == 0 else '\n\n') + line[start:end].strip()
+                chapter_name = ('' if i == 0 else '\n\n') + line[start:end].strip()
                 if end < len(line):
                     chapter_name += '\n\n'
                 elif end == len(line) and i + 1 < len(lines) and lines[i + 1].strip():
@@ -36,7 +37,7 @@ def chapter_name_normalize(lines: list)->list:
 
 def clean_line(lines: list)->list:
     """清除空白行"""
-    return [line for line in lines if line]
+    return [line for line in lines if line.strip()]
 
 
 if __name__ == "__main__":
