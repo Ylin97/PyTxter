@@ -70,8 +70,8 @@ class MainWindow(QMainWindow):
         self.open_file()
         self.save()
         self.save_as()
-        self.convert2utf8()
-        self.convert2utf8bom()
+        self.save2utf8()
+        self.save2utf8bom()
         self.quit()
 
     def file_new_dialog(self):
@@ -175,26 +175,26 @@ class MainWindow(QMainWindow):
         self.file_menu.addAction(self.save_as_action)
         self.file_menu.addSeparator()
 
-    def convert2utf8_dialog(self):
+    def save2utf8_dialog(self):
         """以 utf-8 编码保存会话"""
         print('以 utf-8 编码保存')
 
-    def convert2utf8(self):
+    def save2utf8(self):
         """以 utf-8 编码保存"""
-        self.conver2utf8_action = QAction('以 utf-8 编码保存')
-        self.conver2utf8_action.triggered.connect(self.convert2utf8_dialog)
-        self.file_menu.addAction(self.conver2utf8_action)
+        self.save2utf8_action = QAction('以 utf-8 编码保存')
+        self.save2utf8_action.triggered.connect(self.save2utf8_dialog)
+        self.file_menu.addAction(self.save2utf8_action)
         self.file_menu.addSeparator()
 
-    def convert2utf8bom_dialog(self):
+    def save2utf8bom_dialog(self):
         """以 utf-8 with BOM 编码保存会话"""
         print('以 utf-8 with BOM 编码保存会话')
 
-    def convert2utf8bom(self):
+    def save2utf8bom(self):
         """以 utf-8 with BOM 编码保存"""
-        self.convert2utf8bom_action = QAction("以 utf-8 with bom 编码保存")
-        self.convert2utf8bom_action.triggered.connect(self.convert2utf8bom_dialog)
-        self.file_menu.addAction(self.convert2utf8bom_action)
+        self.save2utf8bom_action = QAction("以 utf-8 with bom 编码保存")
+        self.save2utf8bom_action.triggered.connect(self.save2utf8bom_dialog)
+        self.file_menu.addAction(self.save2utf8bom_action)
         self.file_menu.addSeparator()
 
 
