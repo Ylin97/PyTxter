@@ -212,7 +212,6 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(file_name)
         self.statusBar().showMessage(f'打开文件 - {file_name}\t编码：utf-8')
 
-
     def click2format(self):
         """一键格式化"""
         self.click2format_action = QAction('一键格式化')
@@ -243,6 +242,12 @@ class MainWindow(QMainWindow):
     def clean_space_line_dialog(self):
         """清除空白行会话"""
         print('清除空白行')
+        lines = clean_line(line + '\n' for line in self.text.toPlainText().split('\n'))
+        text = ''
+        for line in lines:
+            text += line
+        self.text.setPlainText(text)
+        self.statusBar().showMessage('清除空白行成功！', 5000)
 
     def clean_space_line(self):
         """清除空白行"""

@@ -1,7 +1,7 @@
 import re
 
 
-def chapter_name_normalize(lines: list):
+def chapter_name_normalize(lines: list)->list:
     """标准化章节名"""
     CHAPTER_NAME_RE = re.compile(r'第(.{1,9})[章节回卷集部篇]\s*.{0,24}\s')
 
@@ -13,9 +13,17 @@ def chapter_name_normalize(lines: list):
             p = 0
             for start, end in positions:
                 parts.append(line[p:start])
-                chapter_name = ('' if start == 0 else '\n') + line[start:end].strip()
-                if i + 1 < len(lines) and lines[i + 1]:
+                chapter_name = ('' if start == 0 else '\n\n') + line[start:end].strip()
+                if end < len(line):
                     chapter_name += '\n\n'
+                elif end == len(line) and i + 1 < len(lines) and lines[i + 1].strip():
+                    chapter_name += '\n\n'
+                else:
+                    chapter_name += '\n'
+                # if i + 1 < len(lines) and lines[i + 1].isspace():  # 保持章节名下面的空行不增加
+                #     parts.append(chapter_name)
+                #     p = end
+                #     continue
                 parts.append(chapter_name)
                 p = end
             parts.append(line[p:])
@@ -24,6 +32,11 @@ def chapter_name_normalize(lines: list):
                 res += part
             lines[i] = res
     return lines
+
+
+def clean_line(lines: list)->list:
+    """清除空白行"""
+    return [line for line in lines if line]
 
 
 if __name__ == "__main__":
