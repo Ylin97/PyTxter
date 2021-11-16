@@ -1,15 +1,18 @@
-#! /usr/bin/python3
+##! /usr/bin/python3
 # coding=utf-8
 
 
 import sys
 from PyQt5.QtGui import QIcon, QKeySequence
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QMenu, QAction, qApp, QTextEdit, QFileDialog, QShortcut, \
+from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QFileDialog,\
     QPlainTextEdit, QMessageBox
+from tools import *
+from format import *
 
 # Global variable
-file_path = None
-file_name = None
+file_path = '.\\未命名文件.txt'
+file_name = '未命名文件.txt'
+file_codec = 'utf-8'
 
 
 class MainWindow(QMainWindow):
@@ -19,13 +22,14 @@ class MainWindow(QMainWindow):
         self.file_menu = self.menu.addMenu('文件')   # 创建文件菜单
         self.edit_menu = self.menu.addMenu('编辑')   # 创建编辑菜单
         self.help_menu = self.menu.addMenu('帮助')   # 创建帮助菜单
+        self.text_formatted = ''                    # 格式化之后的字符串
         self.initUI()
 
     def closeEvent(self, a0) -> None:
         """关闭事件"""
         if not self.text.document().isModified():
             return
-        answer = QMessageBox.question(window, '退出程序', '关闭之前是否保存文件',
+        answer = QMessageBox.question(self, '退出程序', '关闭之前是否保存文件',
                                       QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
                                       )
         # print(answer)
@@ -44,6 +48,7 @@ class MainWindow(QMainWindow):
         self.text = QPlainTextEdit()   # 定义一个文本编辑器
         self.setCentralWidget(self.text)
         self.setWindowTitle('未命名文件.txt')
+        self.statusBar().showMessage(f'新建文件 - {file_name}', 5000)
 
         # 菜单项
         self.create_file_menu()
@@ -70,12 +75,19 @@ class MainWindow(QMainWindow):
     def file_new_dialog(self):
         """新建文件会话"""
         # print('新建文件')
-        # self.close()
-        # self.initUI()
         global file_path
-        self.setWindowTitle('未命名文件.txt')
-        file_path = '.'
-        self.save_dialog()
+        global file_name
+
+        # print(str(self.text).strip())
+        if file_name == '未命名文件.txt' and self.text.toPlainText().strip():
+            self.save_as_dialog()
+        elif file_name != '未命名文件.txt':
+            self.save_dialog(dialog=True)
+        self.text.clear()
+        file_name = '未命名文件.txt'
+        file_path = '.\\未命名文件.txt'
+        self.setWindowTitle(file_name)
+        self.statusBar().showMessage(f'新建文件 - {file_name}', 5000)
 
     def file_new(self):
         """新建文件选项"""
@@ -89,13 +101,19 @@ class MainWindow(QMainWindow):
         """打开文件会话"""
         global file_path
         global file_name
+        global file_codec
         path = QFileDialog.getOpenFileName(self, 'open')[0]
-        file_name = str(path).split('/')[-1]
+        file_name = str(path).split('\\')[-1]
+        # print(file_name)
         if path:
-            with open(path, 'r', encoding='utf-8') as fr:
+            file_codec = detect_encoding(path)[0]
+            with open(path, 'r', encoding=file_codec) as fr:
                 text = fr.read()
             self.text.setPlainText(text)
+            # self.text.document().setModified(False)
+            self.setWindowTitle(file_name)
             file_path = path
+            self.statusBar().showMessage(f'打开文件 - {file_name}\t编码：{file_codec}')
 
     def open_file(self):
         """打开文件选项"""
@@ -106,15 +124,28 @@ class MainWindow(QMainWindow):
         self.file_menu.addSeparator()
 
     # 保存
-    def save_dialog(self):
+    def save_dialog(self, dialog=False):
         """保存文件会话"""
-        if file_path is None:
+        # if file_path is None or not self.text.document().isModified():
+        if dialog:  # 是否弹出关闭文件前保存对话框
+            if not self.text.document().isModified():
+                return
+            answer = QMessageBox.question(self, '关闭文件', '关闭之前是否保存文件？',
+                                          QMessageBox.Yes | QMessageBox.No)
+            # print(answer)
+            if answer & QMessageBox.Save:
+                self.save_dialog()
+
+        if not self.text.document().isModified():
+            print('文件未修改，不需要保存！')
             pass
         else:
-            with open(file_path, 'w', encoding='utf-8') as fw:
+            with open(file_path, 'w', encoding=file_codec) as fw:
                 fw.write(self.text.toPlainText())
             self.text.document().setModified(False)
-        print(f'文件: {file_path}\t保存成功！')
+            print(f'文件: {file_path}\t保存成功！')
+            self.statusBar().showMessage(f'文件: {file_name}\t保存成功！', 5000)
+            self.statusBar().showMessage(f'打开文件 - {file_name}\t编码：{file_codec}')
 
     def save(self):
         """保存文件选项"""
@@ -128,10 +159,11 @@ class MainWindow(QMainWindow):
     def save_as_dialog(self):
         """另存为会话"""
         global file_path
-        path = QFileDialog.getSaveFileName(window, '另存为')[0]
+        path = QFileDialog.getSaveFileName(self, '另存为')[0]
         if path:
             file_path = path
             self.save_dialog()
+            self.statusBar().showMessage('另存文件为')
 
     def save_as(self):
         """另存为选项"""
@@ -171,6 +203,15 @@ class MainWindow(QMainWindow):
     def click2format_dialog(self):
         """一键格式化会话"""
         print('一键格式化')
+        file_to_utf8(file_path)
+        remove_extra_line_break(file_path)
+        with open(file_path, 'r', encoding='utf-8') as fr:
+            text = fr.read()
+        self.text.setPlainText(text)
+        # self.text.document().setModified(False)
+        self.setWindowTitle(file_name)
+        self.statusBar().showMessage(f'打开文件 - {file_name}\t编码：utf-8')
+
 
     def click2format(self):
         """一键格式化"""
@@ -181,7 +222,16 @@ class MainWindow(QMainWindow):
 
     def chapter_name_format_dialog(self):
         """章节名格式化会话"""
-        print('章节名格式化')
+        # print('章节名格式化')
+        # print(self.text.toPlainText().split('\n'))
+        lines = [line + '\n' for line in self.text.toPlainText().split('\n')]
+        lines = chapter_name_normalize(lines)
+        # print(lines)
+        text = ''
+        for line in lines:
+            if line:
+                text += line
+        self.text.setPlainText(text)
 
     def chapter_name_format(self):
         """章节名格式化"""
