@@ -1,7 +1,7 @@
 import re
 
 
-def chapter_name_normalize(lines: list)->list:
+def chapter_name_normalize(lines: list) ->list:
     """标准化章节名"""
     CHAPTER_NAME_RE = re.compile(r'第(.{1,9})[章节回卷集部篇]\s*.{0,24}\s')
 
@@ -35,12 +35,12 @@ def chapter_name_normalize(lines: list)->list:
     return lines
 
 
-def clean_line(lines: list)->list:
+def clean_line(lines: list) ->list:
     """清除空白行"""
     return [line for line in lines if line.strip()]
 
 
-def sub_punctuation(text: str)->str:
+def sub_punctuation(lines: list) ->list:
     """中英标点纠正"""
     pass
 

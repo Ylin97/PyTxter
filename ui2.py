@@ -246,8 +246,8 @@ class MainWindow(QMainWindow):
         """章节名格式化会话"""
         # print('章节名格式化')
         # print(self.text.toPlainText().split('\n'))
-        lines = [line + '\n' for line in self.text.toPlainText().split('\n')]
-        lines = chapter_name_normalize(lines)
+        # lines = [line + '\n' for line in self.text.toPlainText().split('\n')]
+        lines = chapter_name_normalize(self.get_lines())
         # print(lines)
         text = ''
         for line in lines:
@@ -265,7 +265,8 @@ class MainWindow(QMainWindow):
     def clean_space_line_dialog(self):
         """清除空白行会话"""
         print('清除空白行')
-        lines = clean_line(line + '\n' for line in self.text.toPlainText().split('\n'))
+        # lines = clean_line(line + '\n' for line in self.text.toPlainText().split('\n'))
+        lines = clean_line(self.get_lines())
         text = ''
         for line in lines:
             text += line
@@ -321,6 +322,10 @@ class MainWindow(QMainWindow):
         self.replace_action = QAction('替换')
         self.replace_action.triggered.connect(self.replace_dialog)
         self.edit_menu.addAction(self.replace_action)
+
+    def get_lines(self) ->list:
+        """拆分行"""
+        return [line + '\n' for line in self.text.toPlainText().split('\n')]
 
     """
     # ----------------帮助菜单-------------------
