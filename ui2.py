@@ -44,7 +44,7 @@ class MainWindow(QMainWindow):
         """初始化主界面"""
 
         # 初始化主界面
-        self.setMinimumSize(800, 600)
+        self.setMinimumSize(1000, 800)
         self.text = QPlainTextEdit()   # 定义一个文本编辑器
         self.setCentralWidget(self.text)
         self.setWindowTitle('未命名文件.txt')
@@ -225,11 +225,7 @@ class MainWindow(QMainWindow):
 
     def click2format_dialog(self):
         """一键格式化会话"""
-        print('一键格式化')
-        file_to_utf8(file_path)
-        remove_extra_line_break(file_path)
-        with open(file_path, 'r', encoding='utf-8') as fr:
-            text = fr.read()
+        text = auto_format(self.get_lines())
         self.text.setPlainText(text)
         # self.text.document().setModified(False)
         self.setWindowTitle(file_name)
