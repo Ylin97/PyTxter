@@ -4,9 +4,9 @@
 
 import sys
 import copy
-from PyQt5.QtGui import QIcon, QKeySequence
+from PyQt5.QtGui import QIcon, QKeySequence, QFont
 from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QFileDialog,\
-    QPlainTextEdit, QMessageBox
+    QPlainTextEdit, QMessageBox, QFontDialog
 from tools import *
 from format import *
 
@@ -49,14 +49,16 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1000, 800)
         self.text = QPlainTextEdit()   # 定义一个文本编辑器
         self.setCentralWidget(self.text)
+        self.font = QFont()
+        self.text.setFont(self.font)
         self.setWindowTitle('Untitled.txt')
-        self.statusBar().showMessage(f'New - {self.file_name}', 2000)
         self.show_statusbar_msg()
         self.text.textChanged.connect(self.text_changed)  # 实时监控编辑区内容是否发生更改
 
         # 菜单项
         self.create_file_menu()
         self.create_edit_menu()
+        self.create_format_menu()
         self.create_help_menu()
 
         # 显示
@@ -330,8 +332,37 @@ class MainWindow(QMainWindow):
         self.show_statusbar_msg()
         self.is_modified = False
 
+    """----------------格式菜单-------------------
+    # DATE: 2021/11/25
+    # Author: yalin
+    # History: add format_menu
     """
-    # ----------------帮助菜单-------------------
+    def create_format_menu(self):
+        """创建格式菜单"""
+        menu = self.menuBar().addMenu("格式(&O)")
+
+        font           = menu.addAction("字体(&F)", self.font_select_triggered)
+        self.word_wrap = menu.addAction("自动换行(&W)", self.format_wrap_triggered)
+
+        # 设置是否可勾选
+        self.word_wrap.setCheckable(True)
+        self.word_wrap.setChecked(True)
+    
+    def font_select_triggered(self):
+        font, ok = QFontDialog.getFont(self.font)
+        if ok:
+            self.font = font
+            self.text.setFont(font)
+        self.show_statusbar_msg()
+    
+    def format_wrap_triggered(self):
+        if self.word_wrap.isChecked():
+            self.text.setLineWrapMode(QPlainTextEdit.WidgetWidth)
+        else:
+            self.text.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.show_statusbar_msg()
+
+    """----------------帮助菜单-------------------
     # DATE: 2021/11/15 Mon 
     # Author: Yalin
     # History: Create 'Help' menu
@@ -364,7 +395,7 @@ class MainWindow(QMainWindow):
 
     def show_statusbar_msg(self):
         """状态栏常留信息"""
-        msg2 = f'打开文件 - {self.file_path}\t编码：{self.file_codec}'
+        msg2 = f'打开文件 - {self.file_path}  编码：{self.file_codec}'
         self.statusBar().showMessage(msg2)
 
 
