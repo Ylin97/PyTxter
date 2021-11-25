@@ -3,6 +3,7 @@
 
 
 import sys
+import copy
 from PyQt5.QtGui import QIcon, QKeySequence
 from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QFileDialog,\
     QPlainTextEdit, QMessageBox
@@ -30,7 +31,7 @@ class MainWindow(QMainWindow):
         """关闭事件"""
         if self.file_name == 'Untitled.txt' and self.text.toPlainText().isspace():
             return
-        if not self.text.document().isModified() and not self.is_modified:
+        if not self.is_modified:
             return
         answer = QMessageBox.question(self, '退出程序', '文件已修改，退出程序前是否保存文件？',
                                       QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
@@ -50,6 +51,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.text)
         self.setWindowTitle('Untitled.txt')
         self.statusBar().showMessage(f'New - {self.file_name}', 2000)
+        self.show_statusbar_msg()
         self.text.textChanged.connect(self.text_changed)  # 实时监控编辑区内容是否发生更改
 
         # 菜单项
@@ -78,15 +80,12 @@ class MainWindow(QMainWindow):
         save2utf8bom     = menu.addAction("以utf-8 with BOM保存", self.save2utf8bom_triggered)
         exit_file        = menu.addAction("退出(&X)", self.close)
 
+        # 绑定快捷键
         new_file. setShortcut("Ctrl+N")
         open_file.setShortcut("Ctrl+O")
         save_file.setShortcut("Ctrl+S")
         save_fileas.setShortcut("Ctrl+Shift+S")
-
-    def text_changed(self):
-        """如果编辑区内容发生更改，则标题栏显示*号"""
-        self.setWindowTitle('*' + self.file_name)
-        self.is_modified = True
+        exit_file.setShortcut(QKeySequence.Quit)
 
     def new_file_triggered(self):
         """新建文件"""
@@ -101,15 +100,16 @@ class MainWindow(QMainWindow):
         self.file_path = './Untitled.txt'
         self.text_origin = ''
         self.setWindowTitle(self.file_name)
-        self.text.document().setModified(False)
+        # self.text.document().setModified(False)
         self.is_modified = False
-        self.statusBar().showMessage(f'New - {self.file_name}', 2000)
+        self.statusBar().showMessage(f'新建文件 - {self.file_name}', 2000)
+        self.show_statusbar_msg()
 
     def open_file_triggered(self):
         """打开文件"""
         if self.is_modified:
             self.save_triggered(dialog=True)
-        path = QFileDialog.getOpenFileName(self, 'open')[0]
+        path = QFileDialog.getOpenFileName(self, '打开文件')[0]
         self.file_name = str(path).split('/')[-1]
         # print(file_name)
         if path:
@@ -117,18 +117,18 @@ class MainWindow(QMainWindow):
             with open(path, 'r', encoding=self.file_codec) as fr:
                 text = fr.read()
             self.text.setPlainText(text)
+            self.text_origin = copy.copy(text)   # 保存文件原始内容副本
             # self.text.document().setModified(False)
             self.is_modified = False
             self.setWindowTitle(self.file_name)
             self.file_path = path
-            msg = f'Open - {self.file_name}\t编码：{self.file_codec}'
-            self.statusBar().showMessage(msg)
+            self.show_statusbar_msg()
 
     def save_triggered(self, dialog=False):
         """保存文件"""
         # if file_path is None or not self.text.document().isModified():
         if dialog:  # 是否弹出关闭文件前保存对话框
-            if not self.text.document().isModified() and not self.is_modified:
+            if not self.is_modified:
                 return
             answer = QMessageBox.question(self, '关闭文件', '文件已修改，关闭前是否保存文件？',
                                           QMessageBox.Yes | QMessageBox.No)
@@ -140,9 +140,9 @@ class MainWindow(QMainWindow):
                 self.is_modified = False
                 return
 
-        if not self.text.document().isModified() and not self.is_modified:
+        if not self.is_modified:
             # print('文件未修改，不需要保存！')
-            self.statusBar().showMessage("文件未修改，不需要保存！")
+            self.statusBar().showMessage("文件未修改，不需要保存！", 2000)
         else:
             with open(self.file_path, 'w', encoding=self.file_codec) as fw:
                 fw.write(self.text.toPlainText())
@@ -152,8 +152,7 @@ class MainWindow(QMainWindow):
             self.setWindowTitle(self.file_name)
             msg1 = f'文件: {self.file_name}\t保存成功！'
             self.statusBar().showMessage(msg1, 2000)
-            msg2 = f'Open - {self.file_name}\t编码：{self.file_codec}'
-            self.statusBar().showMessage(msg2)
+            self.show_statusbar_msg()
 
     def save_as_triggered(self):
         """另存为"""
@@ -163,12 +162,11 @@ class MainWindow(QMainWindow):
                 fw.write(self.text.toPlainText())
                 # self.text.document().setModified(False)
                 # self.is_modified = False
-                print(f'文件: {self.file_path}\t另存成功！')
+                # print(f'文件: {self.file_path}\t另存成功！')
                 # self.setWindowTitle(self.file_name)
                 msg1 = f'文件: {self.file_name}\t另存成功！'
                 self.statusBar().showMessage(msg1, 2000)
-                msg2 = f'Open - {self.file_name}\t编码：{self.file_codec}'
-                self.statusBar().showMessage(msg2)
+                self.show_statusbar_msg()
 
     def save2utf8_triggered(self):
         """以 utf-8 编码保存会话"""
@@ -177,12 +175,11 @@ class MainWindow(QMainWindow):
             fw.write(self.text.toPlainText())
             # self.text.document().setModified(False)
             # self.is_modified = False
-            print(f'文件: {self.file_path}\t以 utf-8 编码保存成功！')
+            # print(f'文件: {self.file_path}\t以 utf-8 编码保存成功！')
             self.setWindowTitle(self.file_name)
             msg1 = f'文件: {self.file_name}\t以 utf-8 编码保存成功！'
             self.statusBar().showMessage(msg1, 2000)
-            msg2 = f'打开文件 - {self.file_name}\t编码：{self.file_codec}'
-            self.statusBar().showMessage(msg2)
+            self.show_statusbar_msg()
 
     def save2utf8bom_triggered(self):
         """以 utf-8 with BOM 编码保存会话"""
@@ -191,12 +188,11 @@ class MainWindow(QMainWindow):
             fw.write(self.text.toPlainText())
             # self.text.document().setModified(False)
             # self.is_modified = False
-            print(f'文件: {self.file_path}\t以 utf-8 with BOM 编码保存成功！')
+            # print(f'文件: {self.file_path}\t以 utf-8 with BOM 编码保存成功！')
             self.setWindowTitle(self.file_name)
             msg1 = f'文件: {self.file_name}\t以 utf-8 with BOM 编码保存成功！'
             self.statusBar().showMessage(msg1, 2000)
-            msg2 = f'打开文件 - {self.file_name}\t编码：{self.file_codec}'
-            self.statusBar().showMessage(msg2)
+            self.show_statusbar_msg()
 
     """---------------编辑菜单-------------------
     # DATE: 2021/11/15 Mon
@@ -227,6 +223,7 @@ class MainWindow(QMainWindow):
         menu.addSeparator()
         checkAllEdit        = menu.addAction("全选(&A)")
         clean               = menu.addAction("清空编辑区(&L)", self.clean_triggered)
+        recovery2origin     = menu.addAction("还原文件内容", self.recovery2origin)
 
         click2format.setShortcut("Ctrl+G")
         revokeEdit.setShortcut("Ctrl+Z") #设置快捷键
@@ -247,8 +244,8 @@ class MainWindow(QMainWindow):
         self.text.setPlainText(text)
         # self.text.document().setModified(False)
         # self.setWindowTitle(self.file_name)
-        msg = f'打开文件 - {self.file_name}\t编码：utf-8'
-        self.statusBar().showMessage(msg)
+        self.show_statusbar_msg()
+        self.is_modified = True
 
     def chapter_name_format_triggered(self):
         """章节名格式化"""
@@ -261,6 +258,7 @@ class MainWindow(QMainWindow):
                 text += line
         self.text.setPlainText(text)
         self.statusBar().showMessage("格式化章节名成功！", 2000)
+        self.show_statusbar_msg()
         self.is_modified = True
 
     def clean_null_line_triggered(self):
@@ -273,6 +271,7 @@ class MainWindow(QMainWindow):
         self.text.setPlainText(text)
         # self.text.document().setModified(True)
         self.statusBar().showMessage('清除空白行成功！', 2000)
+        self.show_statusbar_msg()
         self.is_modified = True
 
     def ban_char_replace_triggered(self):
@@ -288,6 +287,7 @@ class MainWindow(QMainWindow):
             text += line
         self.text.setPlainText(text)
         self.statusBar().showMessage('标点纠正成功！', 2000)
+        self.show_statusbar_msg()
         self.is_modified = True
 
     def find_triggered(self):
@@ -324,11 +324,11 @@ class MainWindow(QMainWindow):
 
     def recovery2origin(self):
         """还原编辑区到初始态"""
-        set
-
-    def get_lines(self) ->list:
-        """拆分行"""
-        return [line + '\n' for line in self.text.toPlainText().split('\n')]
+        self.text.setPlainText(self.text_origin)
+        self.statusBar().showMessage(f'还原成功！', 2000)
+        self.setWindowTitle(f'{self.file_name}')
+        self.show_statusbar_msg()
+        self.is_modified = False
 
     """
     # ----------------帮助菜单-------------------
@@ -343,11 +343,29 @@ class MainWindow(QMainWindow):
         menu = self.menuBar().addMenu("帮助(&H)")
         menu.addAction("关于", self.about_triggered)
 
-
     def about_triggered(self):
         """关于会话"""
         about_text = "<center>这是一个txt小说编辑器</center><p>版本：0.01 beta</p>"
         QMessageBox.about(window, '说明', about_text)
+
+    """--------------辅助方法-------------------
+    # DATE: 2021/11/25
+    # Author: yalin
+    # History: add show_statusbar_msg function
+    """
+    def text_changed(self):
+        """如果编辑区内容发生更改，则标题栏显示*号"""
+        self.setWindowTitle('*' + self.file_name)
+        self.is_modified = True
+
+    def get_lines(self) ->list:
+        """拆分行"""
+        return [line + '\n' for line in self.text.toPlainText().split('\n')]
+
+    def show_statusbar_msg(self):
+        """状态栏常留信息"""
+        msg2 = f'打开文件 - {self.file_path}\t编码：{self.file_codec}'
+        self.statusBar().showMessage(msg2)
 
 
 if __name__ == '__main__':
