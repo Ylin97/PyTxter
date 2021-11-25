@@ -1,21 +1,33 @@
-import sys
-from PyQt5 import QtWidgets
-from window import Ui_TextEdit
+import re
 
-# 加载窗体
-app = QtWidgets.QApplication(sys.argv)
-window = QtWidgets.QMainWindow()
-ui = Ui_TextEdit()
-ui.setupUi(window)
 
-# 加载按钮事件
-ui.tool_open.clicked.connect(ui.open_file)
-ui.tool_save.clicked.connect(ui.save_file)
-ui.tool_clear.clicked.connect(ui.clear_content)
-ui.tool_exit.clicked.connect(ui.exit_window)
-ui.tool_save_as.clicked.connect(ui.save_as_other_file)
-ui.tool_recover.clicked.connect(ui.recover_content)
-ui.tool_unmake.clicked.connect(ui.unmake_content)
+def correct_punctuation(lines: list) ->list:
+    """中英标点纠正"""
+    for num, line in enumerate(lines):
+        # EN to CN
+        if len(re.findall(r'[\u4e00-\u9fa5]', line)) / len(line) > 0.4:
+            lines = punction_replace(lines, num, 1)
+        # CN to EN
+        else:
+            lines = punction_replace(lines, num, 0)
+    return lines
 
-window.show()
-sys.exit(app.exec_())
+
+def punction_replace(lines: list, num: int, lang: int) ->list:
+    """中英标点替换"""
+    # EN_CN_PUNC = [('\'', '’'), ('\'', '‘'), ('!', '！'), ('"', "“"), ('"', '”'), (':', '：'),
+    #             (',', '，'), ('.', '。'), ('?', '？')]
+    EN_CN_PUNC = [ ('!', '！'), (':', '：'), (',', '，'), ('.', '。'), ('?', '？')]
+    for c in lines[num]:
+        i = 0
+        for punc in (x[~lang] for x in EN_CN_PUNC):
+            if c == punc:
+                lines[num] = lines[num].replace(c, EN_CN_PUNC[i][lang])
+                break
+            i += 1
+    return lines
+
+lines = ['A test。to Python.', '测试,测试。', '正是一个测试"hello".']
+
+print(correct_punctuation(lines))
+# print('a apple。string'.replace('。', '.'))

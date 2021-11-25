@@ -46,16 +46,38 @@ def clean_line(lines: list) ->list:
     return [line for line in lines if line.strip()]
 
 
-def sub_punctuation(lines: list) ->list:
+def correct_punctuation(lines: list) ->list:
     """中英标点纠正"""
-    pass
+    for num, line in enumerate(lines):
+        # EN to CN
+        if len(re.findall(r'[\u4e00-\u9fa5]', line)) / len(line) > 0.4:
+            lines = punction_replace(lines, num, 1)
+        # CN to EN
+        else:
+            lines = punction_replace(lines, num, 0)
+    return lines
+
+
+def punction_replace(lines: list, num: int, lang: int) ->list:
+    """中英标点替换"""
+    # EN_CN_PUNC = [('\'', '’'), ('\'', '‘'), ('!', '！'), ('"', "“"), ('"', '”'), (':', '：'),
+    #             (',', '，'), ('.', '。'), ('?', '？')]
+    EN_CN_PUNC = [ ('!', '！'), (':', '：'), (',', '，'), ('.', '。'), ('?', '？')]
+    for c in lines[num]:
+        i = 0
+        for punc in (x[~lang] for x in EN_CN_PUNC):
+            if c == punc:
+                lines[num] = lines[num].replace(c, EN_CN_PUNC[i][lang])
+                break
+            i += 1
+    return lines
 
 
 def auto_format(lines: list) ->str:
     """自动格式化"""
     global result_text
     tmp = ''
-    for item in chapter_name_normalize(lines):
+    for item in chapter_name_normalize(correct_punctuation(lines)):
         tmp += item
     lines = tmp.split('\n')
     # lines = clean_line(chapter_name_normalize(lines))

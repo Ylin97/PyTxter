@@ -13,6 +13,7 @@ from format import *
 file_path = '.\\未命名文件.txt'
 file_name = '未命名文件.txt'
 file_codec = 'utf-8'
+is_modified = False
 
 
 class MainWindow(QMainWindow):
@@ -27,7 +28,7 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, a0) -> None:
         """关闭事件"""
-        if not self.text.document().isModified():
+        if not self.text.document().isModified() and not is_modified:
             return
         answer = QMessageBox.question(self, '退出程序', '关闭之前是否保存文件',
                                       QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
@@ -49,6 +50,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.text)
         self.setWindowTitle('未命名文件.txt')
         self.statusBar().showMessage(f'新建文件 - {file_name}', 5000)
+        self.text.textChanged.connect(self.text_changed)  # 实时监控编辑区内容是否发生更改
 
         # 菜单项
         self.create_file_menu()
@@ -73,6 +75,12 @@ class MainWindow(QMainWindow):
         self.save2utf8()
         self.save2utf8bom()
         self.quit()
+
+    def text_changed(self):
+        """如果编辑区内容发生更改，则标题栏显示*号"""
+        global file_name, is_modified
+        self.setWindowTitle('*' + file_name)
+        is_modified = True
 
     def file_new_dialog(self):
         """新建文件会话"""
@@ -129,8 +137,9 @@ class MainWindow(QMainWindow):
     def save_dialog(self, dialog=False):
         """保存文件会话"""
         # if file_path is None or not self.text.document().isModified():
+        global is_modified
         if dialog:  # 是否弹出关闭文件前保存对话框
-            if not self.text.document().isModified():
+            if not self.text.document().isModified() and not is_modified:
                 return
             answer = QMessageBox.question(self, '关闭文件', '关闭之前是否保存文件？',
                                           QMessageBox.Yes | QMessageBox.No)
@@ -138,14 +147,16 @@ class MainWindow(QMainWindow):
             if answer & QMessageBox.Save:
                 self.save_dialog()
 
-        if not self.text.document().isModified():
+        if not self.text.document().isModified() and not is_modified:
             print('文件未修改，不需要保存！')
             pass
         else:
             with open(file_path, 'w', encoding=file_codec) as fw:
                 fw.write(self.text.toPlainText())
             self.text.document().setModified(False)
+            is_modified = False
             print(f'文件: {file_path}\t保存成功！')
+            self.setWindowTitle(file_name)
             self.statusBar().showMessage(f'文件: {file_name}\t保存成功！', 5000)
             self.statusBar().showMessage(f'打开文件 - {file_name}\t编码：{file_codec}')
 
@@ -243,6 +254,7 @@ class MainWindow(QMainWindow):
         # print('章节名格式化')
         # print(self.text.toPlainText().split('\n'))
         # lines = [line + '\n' for line in self.text.toPlainText().split('\n')]
+        global is_modified
         lines = chapter_name_normalize(self.get_lines())
         # print(lines)
         text = ''
@@ -250,6 +262,7 @@ class MainWindow(QMainWindow):
             if line:
                 text += line
         self.text.setPlainText(text)
+        is_modified = True
 
     def chapter_name_format(self):
         """章节名格式化"""
@@ -260,14 +273,17 @@ class MainWindow(QMainWindow):
 
     def clean_space_line_dialog(self):
         """清除空白行会话"""
-        print('清除空白行')
+        # print('清除空白行')
+        global is_modified
         # lines = clean_line(line + '\n' for line in self.text.toPlainText().split('\n'))
         lines = clean_line(self.get_lines())
         text = ''
         for line in lines:
             text += line
         self.text.setPlainText(text)
+        # self.text.document().setModified(True)
         self.statusBar().showMessage('清除空白行成功！', 5000)
+        is_modified = True
 
     def clean_space_line(self):
         """清除空白行"""
@@ -278,6 +294,7 @@ class MainWindow(QMainWindow):
 
     def ban_char_substitute_dialog(self):
         """屏蔽字替换会话"""
+        global is_modified
         print('屏蔽字替换')
 
     def ban_char_substitute(self):
@@ -289,8 +306,15 @@ class MainWindow(QMainWindow):
 
     def punctuation_correct_dialog(self):
         """中英标点纠正会话"""
-        print('中英标点纠正')
-        self.text.setPlainText(sub_punctuation(self.text.toPlainText()))
+        # print('中英标点纠正')
+        global is_modified
+        lines = correct_punctuation(self.get_lines())
+        text = ''
+        for line in lines:
+            text += line
+        self.text.setPlainText(text)
+        self.statusBar().showMessage('标点纠正成功！', 5000)
+        is_modified = True
 
     def punctuation_correct(self):
         """中英标点纠正"""
