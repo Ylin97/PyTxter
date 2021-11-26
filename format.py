@@ -104,6 +104,7 @@ def punction_replace(lines: list, num: int, lang: int) ->list:
 def auto_format(lines: list) ->str:
     """自动格式化"""
     global result_text
+    result_text = ''
     tmp = ''
     for item in chapter_name_normalize(correct_punctuation(lines)):
         tmp += item
