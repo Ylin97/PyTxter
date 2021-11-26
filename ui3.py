@@ -61,6 +61,12 @@ class MainWindow(QMainWindow):
         self.create_format_menu()
         self.create_help_menu()
 
+        # 搜索相关项
+        # 搜索相关项
+        self.search_key = None
+        self.search_count = 0
+        self.search_current = 0
+
         # 信号绑定
         self.text.textChanged.connect(self.text_changed)  # 实时监控编辑区内容是否发生更改
         self.text.textChanged.connect(self.find_enable) 
@@ -253,8 +259,6 @@ class MainWindow(QMainWindow):
         """一键格式化会话"""
         text = auto_format(self.get_lines())
         self.text.setPlainText(text)
-        # self.text.document().setModified(False)
-        # self.setWindowTitle(self.file_name)
         self.show_statusbar_msg()
         self.is_modified = True
 
@@ -306,14 +310,14 @@ class MainWindow(QMainWindow):
         self.find_dialog = QDialog(self)
         self.find_dialog.setWindowTitle('查找')
         search_label = QLabel('查找：')
-        self.search_text = QLineEdit(self.last_search)
-        search_label.setBuddy(self.search_text)
+        self.search_qle = QLineEdit(self.last_search)
+        search_label.setBuddy(self.search_qle)
         self.search_btn = QPushButton('查找下一个')
         self.search_btn.setDefault(True)
 
         layout = QBoxLayout(QBoxLayout.LeftToRight)
         layout.addWidget(search_label)
-        layout.addWidget(self.search_text)
+        layout.addWidget(self.search_qle)
         layout.addWidget(self.search_btn)
 
         self.search_btn.clicked.connect(self.search_triggered)
@@ -333,19 +337,19 @@ class MainWindow(QMainWindow):
         # print('查找')
         cursor = self.text.textCursor()
         start = cursor.anchor()
-        text = self.search_text.text()
+        key_word = self.search_qle.text()
         # 上一次查找的字符串
-        self.last_search = text
+        self.last_search = key_word
         # 根据条件判断是否激活findNextAction
         if self.last_search:
             self.find_next_act.setEnabled(True)
-        text_len = len(text)
+        text_len = len(key_word)
         context = self.text.toPlainText()
         # 先在文本中进行查找，判断字符串是否存在
-        index = context.find(text, start)
+        index = context.find(key_word, start)
         if -1 == index:
             QMessageBox.information(
-                self.find_dialog, '记事本', '找不到\"%s\"' % text)
+                self.find_dialog, '记事本', '找不到\"%s\"' % key_word)
         else:
             start = index
             cursor = self.text.textCursor()
@@ -364,12 +368,12 @@ class MainWindow(QMainWindow):
         self.replace_dialog = QDialog(self)
         self.replace_dialog.setWindowTitle('替换')
         search_label = QLabel('查找内容：')
-        self.search_text = QLineEdit()
-        search_label.setBuddy(self.search_text)
+        self.search_qle = QLineEdit()
+        search_label.setBuddy(self.search_qle)
         replace_label = QLabel('替换为：')
         # 默认替换为空格
-        self.replace_text = QLineEdit()
-        replace_label.setBuddy(self.replace_text)
+        self.replace_content = QLineEdit()
+        replace_label.setBuddy(self.replace_content)
         self.find_button = QPushButton('查找下一个')
         self.replace_button = QPushButton('替换')
         self.replace_all_button = QPushButton('全部替换')
@@ -377,34 +381,34 @@ class MainWindow(QMainWindow):
         self.replace_button.setEnabled(False)
         self.replace_all_button.setEnabled(False)
 
-        self.find_button.clicked.connect(self.replaceText)
-        self.replace_button.clicked.connect(self.replaceText)
+        self.find_button.clicked.connect(self.replace_text)
+        self.replace_button.clicked.connect(self.replace_text)
         self.replace_all_button.clicked.connect(self.replace_all)
-        self.search_text.textChanged.connect(self.replace_enable)
+        self.search_qle.textChanged.connect(self.replace_enable)
 
         layout = QGridLayout()
         layout.addWidget(search_label, 0, 0)
-        layout.addWidget(self.search_text, 0, 1)
+        layout.addWidget(self.search_qle, 0, 1)
         layout.addWidget(self.find_button, 0, 2)
         layout.addWidget(replace_label, 1, 0)
-        layout.addWidget(self.replace_text, 1, 1)
+        layout.addWidget(self.replace_content, 1, 1)
         layout.addWidget(self.replace_button, 1, 2)
         layout.addWidget(self.replace_all_button, 2, 2)
         self.replace_dialog.setLayout(layout)
         self.replace_dialog.show()
 
     def replace_enable(self):
-        if not self.search_text.text():
+        if not self.search_qle.text():
             self.replace_button.setEnabled(False)
             self.replace_all_button.setEnabled(False)
         else:
             self.replace_button.setEnabled(True)
             self.replace_all_button.setEnabled(True)
 
-    def replaceText(self):
+    def replace_text(self):
         cursor = self.text.textCursor()
         start = cursor.anchor()
-        text = self.search_text.text()
+        text = self.search_qle.text()
         text_len = len(text)
         context = self.text.toPlainText()
         index = context.find(text, start)
@@ -414,10 +418,10 @@ class MainWindow(QMainWindow):
             if text == cursor.selectedText():
                 position = cursor.anchor()
                 cursor.removeSelectedText()
-                replace_text = self.replace_text.text()
+                replace_text = self.replace_content.text()
                 cursor.insertText(replace_text)
                 # 替换文字后要重新搜索，这个时候cursor还未修改
-                self.replaceText()
+                self.replace_text()
                 return
         if -1 == index:
             QMessageBox.information(
@@ -434,8 +438,8 @@ class MainWindow(QMainWindow):
 
     def replace_all(self):
         context = self.text.toPlainText()
-        search_word = self.search_text.text()
-        replace_word = self.replace_text.text()
+        search_word = self.search_qle.text()
+        replace_word = self.replace_content.text()
         new_context = context.replace(search_word, replace_word)
         doc = self.text.document()
         curs = QTextCursor(doc)

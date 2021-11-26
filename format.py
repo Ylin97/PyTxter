@@ -1,6 +1,6 @@
 import re
 
-from chardet import universaldetector
+from chardet.universaldetector import UniversalDetector
 
 
 # 常量
@@ -21,7 +21,7 @@ def detect_encoding(filepath):
         confidence: 检测结果的置信度，百分比
     """
     chinese_codings = ['GBK', 'GB2312', 'GB18030']  # 字符集 GB2312 < GBK < GB18030
-    detector = universaldetector()
+    detector = UniversalDetector()
     detector.reset()
     for each in open(filepath, 'rb'):
         detector.feed(each)
