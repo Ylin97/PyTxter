@@ -292,7 +292,9 @@ class MainWindow(QMainWindow):
 
     def ban_char_replace_triggered(self):
         """屏蔽字替换会话"""
-        print('屏蔽字替换')
+        # print('屏蔽字替换')
+        #TODO:计划使用阅读的净化规则
+        QMessageBox.information(self, '提示', '此功能还未能实现╮(╯▽╰)╭', QMessageBox.Ok)
 
     def punctuation_correct_triggered(self):
         """中英标点纠正会话"""
