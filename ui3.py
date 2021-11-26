@@ -5,9 +5,9 @@
 import sys
 import copy
 from PyQt5.QtGui import QIcon, QKeySequence, QFont, QTextCursor
-from PyQt5.QtWidgets import QApplication, QBoxLayout, QDialog, QGridLayout, QLabel, QLineEdit, QMainWindow, QAction, QFileDialog,\
-    QPlainTextEdit, QMessageBox, QFontDialog, QPushButton
-from tools import *
+from PyQt5.QtWidgets import QApplication, QBoxLayout, QDialog, QGridLayout, QLabel, QLineEdit, QMainWindow,\
+    QPlainTextEdit, QMessageBox, QFontDialog, QPushButton, QAction, QFileDialog
+# from tools import *
 from format import *
 
 # Global variable

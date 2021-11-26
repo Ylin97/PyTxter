@@ -1,5 +1,7 @@
 import re
 
+from chardet import universaldetector
+
 
 # 常量
 HEAD_SPACE = ' ' * 4
@@ -8,6 +10,32 @@ CHAPTER_NAME_RE = re.compile(r'第(.{1,9})[章节回卷集部篇]\s*.{0,24}\s')
 # 全局变量
 result_text = ''
 
+
+def detect_encoding(filepath):
+    """检测文件编码
+    Args:
+        detector: UniversalDetector 对象
+        filepath: 文件路径
+    Return:
+        file_encoding: 文件编码
+        confidence: 检测结果的置信度，百分比
+    """
+    chinese_codings = ['GBK', 'GB2312', 'GB18030']  # 字符集 GB2312 < GBK < GB18030
+    detector = universaldetector()
+    detector.reset()
+    for each in open(filepath, 'rb'):
+        detector.feed(each)
+        if detector.done:
+            break
+    detector.close()
+    file_encoding = detector.result['encoding']
+    confidence = detector.result['confidence']
+    if file_encoding is None:
+        file_encoding = 'unknown'
+        confidence = 0.99
+    elif file_encoding in chinese_codings:
+        file_encoding = 'GB18030'
+    return file_encoding, confidence
 
 def chapter_name_normalize(lines: list) ->list:
     """标准化章节名"""
