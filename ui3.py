@@ -2,19 +2,32 @@
 # coding=utf-8
 
 
+import os
 import sys
 import copy
+import ctypes
+import configparser
+
+from PyQt5.QtCore import QTextCodec
 from PyQt5.QtGui import QIcon, QKeySequence, QFont, QTextCursor
 from PyQt5.QtWidgets import QApplication, QBoxLayout, QDialog, QGridLayout, QLabel, QLineEdit, QMainWindow,\
     QPlainTextEdit, QMessageBox, QFontDialog, QPushButton, QAction, QFileDialog
 # from tools import *
 from format import *
 
+
+# 常量
+CONFIG_FILE_PATH = "notepad.ini"
+
 # Global variable
 # file_path = '.\\未命名文件.txt'
 # file_name = '未命名文件.txt'
 # file_codec = 'utf-8'
 # is_modified = False
+
+# 解决任务栏图标问题
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("notepad")
+QTextCodec.setCodecForLocale(QTextCodec.codecForName("utf-8"))
 
 
 class MainWindow(QMainWindow):
@@ -47,9 +60,15 @@ class MainWindow(QMainWindow):
         """初始化主界面"""
 
         # 初始化主界面
-        self.setMinimumSize(1000, 800)
         self.text = QPlainTextEdit()   # 定义一个文本编辑器
         self.setCentralWidget(self.text)
+        # 载入配置信息
+        self.config = Config(self, self.text)
+        # self.font_cfg = MyFont()
+        self.config.judge_config()
+        self.config.read_settings()
+
+        # self.setMinimumSize(1000, 800)
         self.font = QFont()
         self.text.setFont(self.font)
         self.setWindowTitle('Untitled.txt')
@@ -234,7 +253,7 @@ class MainWindow(QMainWindow):
         replace_act        = menu.addAction("替换(&E)", self.replace_triggered)
         # goto_act         = menu.addAction("转到(&D)...")
         menu.addSeparator()
-        check_all_act      = menu.addAction("全选(&A)")
+        check_all_act      = menu.addAction("全选(&A)", self.text.selectAll)
         clean_act          = menu.addAction("清空编辑区(&L)", self.text.clear)
         re2origin_act      = menu.addAction("还原文件内容", self.recovery2origin)
 
@@ -521,11 +540,13 @@ class MainWindow(QMainWindow):
     def about_triggered(self):
         """关于会话"""
         about_text = """
-                    <center>这是一个txt小说编辑器</center><p>版本：0.01 beta</p>
-                    <p>感谢以下项目：</p>
-                    <p>likui911: https://github.com/likui911/notepad_pyqt5</p>
+                    <h2 align="center">这是一个txt小说编辑器</h2><center>版本：0.01 beta</center>
+                    <p>by yalin <a href="https://github.com/Ylin97/txtbook-editor">https://github.com/Ylin97/txtbook-editor</a></p>
+                    <h3>感谢以下作者：</h3>
+                    <p>likui911: <a href="https://github.com/likui911/notepad_pyqt5">https://github.com/likui911/notepad_pyqt5</a></p>
+                    <p>Aloe_n: <a href="https://www.cnblogs.com/aloe-n/p/8175757.html">https://www.cnblogs.com/aloe-n/p/8175757.html</a></p>
                     """
-        QMessageBox.about(window, '说明', about_text)
+        QMessageBox.about(window, '关于', about_text)
 
     """--------------辅助方法-------------------
     # DATE: 2021/11/25
@@ -546,9 +567,101 @@ class MainWindow(QMainWindow):
         msg2 = f'打开文件 - {self.file_path}  编码：{self.file_codec}'
         self.statusBar().showMessage(msg2)
 
+class Config:
+    """配置类"""
+    def __init__(self, main_window: MainWindow, text_obj: QPlainTextEdit) -> None:
+        self.text = text_obj
+        self.window = main_window
+        self.config = configparser.ConfigParser()
+        self.config.read(CONFIG_FILE_PATH, 'utf-8')
+
+        # Font attribute
+        self.font_family = 'Consolas'
+        self.font_size = '16'
+        self.font_bold = 'False'
+        self.font_italic = 'False'
+        self.font_strikeOut = 'False'
+        self.font_underline = 'False'
+
+    def judge_config(self):
+        """如果配置文件不存在，则新建"""
+        if not os.path.exists(CONFIG_FILE_PATH):
+            f = open(CONFIG_FILE_PATH, 'w', encoding='utf-8')
+            f.close()
+
+    def read_settings(self):
+        # 调节窗口大小
+        width = self.get_config('Display', 'width', 1000)
+        height = self.get_config('Display', 'height ', 800)
+        px = self.get_config('Display', 'x', 0)
+        py = self.get_config('Display', 'y', 0)
+        self.window.move(int(px), int(py))
+        self.window.resize(int(width), (height))
+
+        self.default_dir = self.get_config('Setting', 'dir', '')
+
+        self.font_family = self.get_config('Font', 'family', 'Consolas')
+        self.font_size = self.get_config('Font', 'size', '10')
+        self.font_bold = self.get_config('Font', 'bold', '0')
+        self.font_italic = self.get_config('Font', 'italic', '0')
+        self.font_strikeOut = self.get_config('Font', 'strikeOut', '0')
+        self.font_underline = self.get_config('Font', 'underline', '0')
+        font = QFont(self.font_family, int(self.font_size))
+        font.setBold(int(self.font_bold))
+        font.setItalic(int(self.font_italic))
+        font.setStrikeOut(int(self.font_strikeOut))
+        font.setUnderline(int(self.font_underline))
+        self.text.setFont(font)
+
+    def write_setting(self):
+        """写入用户自定义设置信息到配置文件"""
+        # 窗口位置信息
+        self.write_config('Display', 'width', str(self.window.size().width()))
+        self.write_config('Display', 'height', str(self.window.size().height()))
+        self.write_config('Display', 'x', str(self.window.pos().x()))
+        self.write_config('Display', 'y', str(self.window.pos().y()))
+
+        self.write_config('Setting', 'dir', self.default_dir)
+
+        self.write_config('Font', 'family', self.text.font().family())
+        self.write_config('Font', 'size', str(self.text.font().pointSize()))
+        self.write_config('Font', 'bold', int(self.text.font().bold()))
+        self.write_config('Font', 'italic', int(self.text.font().italic()))
+        self.write_config('Font', 'strikeOut', int(
+            self.text.font().strikeOut()))
+        self.write_config('Font', 'underline', int(
+            self.text.font().underline()))
+
+        # 写入文件
+        self.config.write(open(CONFIG_FILE_PATH, 'w', encoding='utf-8'))
+
+    def get_config(self, section, key, default):
+        # 返回配置信息，如果获取失败返回默认值
+        try:
+            return self.config[section][key]
+        except:
+            return default
+    
+    def write_config(self, section, key, value):
+        # 向config写入信息
+        if not self.config.has_section(section):
+            self.config.add_section(section)
+        # value必须是str，否则会抛TypeError
+        self.config.set(section, key, str(value))
+
+
+class MyFont:
+    """字体类"""
+    def __init__(self) -> None:
+        self.family = 'Consolas'
+        self.size = '16'
+        self.bold = 'False'
+        self.italic = 'False'
+        self.strikeOut = 'False'
+        self.underline = 'False'
 
 if __name__ == '__main__':
-    app = QApplication([])
+    app = QApplication(sys.argv)
     app.setApplicationName('文本编辑器')
     window = MainWindow()
     sys.exit(app.exec_())
