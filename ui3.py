@@ -62,7 +62,7 @@ class MainWindow(QMainWindow):
         self.create_help_menu()
 
         # 搜索相关项
-        # 搜索相关项
+        self.search_content = ''
         self.search_key = None
         self.search_count = 0
         self.search_current = 0
@@ -70,6 +70,7 @@ class MainWindow(QMainWindow):
         # 信号绑定
         self.text.textChanged.connect(self.text_changed)  # 实时监控编辑区内容是否发生更改
         self.text.textChanged.connect(self.find_enable) 
+        self.text.textChanged.connect(self.reset_search_content)
 
         # 显示
         self.show()
@@ -332,35 +333,52 @@ class MainWindow(QMainWindow):
             self.find_act.setEnabled(False)
             self.find_next_act.setEnabled(False)
 
+    def reset_search_content(self):
+        """改变待搜索内容"""
+        self.search_content = None
+        self.search_count = 0
+        self.search_current = 0
+
+    def select(self, start, length):
+        """选中文字,高亮显示"""
+        cur = QTextCursor(self.text.textCursor())
+        cur.setPosition(start)
+        cur.setPosition(start + length, QTextCursor.KeepAnchor)
+        self.text.setTextCursor(cur)
+
     def search_triggered(self):
         """查找字符串"""
         # print('查找')
-        cursor = self.text.textCursor()
-        start = cursor.anchor()
         key_word = self.search_qle.text()
-        # 上一次查找的字符串
-        self.last_search = key_word
-        # 根据条件判断是否激活findNextAction
-        if self.last_search:
-            self.find_next_act.setEnabled(True)
-        text_len = len(key_word)
-        context = self.text.toPlainText()
-        # 先在文本中进行查找，判断字符串是否存在
-        index = context.find(key_word, start)
-        if -1 == index:
-            QMessageBox.information(
-                self.find_dialog, '记事本', '找不到\"%s\"' % key_word)
+        if key_word != self.search_key:
+            self.search_key = key_word
+            self.search_count = 0
+            self.search_current = 0
+        if not self.search_content:
+            self.search_content = self.text.toPlainText()
+        if not self.search_count:
+            self.search_count = self.search_content.count(key_word)
+            if self.search_count != 0:
+                start = self.search_content.index(key_word)
+                self.select(start, len(key_word))
+                self.search_current += 1
+            else:
+                QMessageBox.warning(self, '查找', '未找到内容！', QMessageBox.Ok)
         else:
-            start = index
-            cursor = self.text.textCursor()
-            cursor.clearSelection()
-            cursor.movePosition(QTextCursor.Start, QTextCursor.MoveAnchor)
-            # 向右多移动字符串长度
-            cursor.movePosition(QTextCursor.Right, QTextCursor.MoveAnchor, start + text_len)
-            # 同时anchor、position同时左移字符串长度
-            cursor.movePosition(QTextCursor.Left, QTextCursor.KeepAnchor, text_len)
-            cursor.selectedText()
-            self.text.setTextCursor(cursor)
+            if self.search_current < self.search_count:
+                start = self.search_content.find(key_word, self.text.textCursor().position())
+                if start != -1:
+                    self.select(start, len(key_word))
+                    self.search_current += 1
+            else:
+                answer = QMessageBox.question(self, '查找', '已到达文件结尾，是否从头开始查找？',
+                                          QMessageBox.Yes | QMessageBox.No)
+                if answer & QMessageBox.Yes:
+                    self.search_count = 0
+                    self.search_current = 0
+                    self.search_triggered()
+        self.text.setFocus()
+        self.statusBar().showMessage("匹配[{}/{}]".format(self.search_current, self.search_count))
 
     def replace_triggered(self):
         """替换"""
