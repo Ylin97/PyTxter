@@ -1,7 +1,7 @@
 # coding=utf-8
 
 """
-# Usage: python ./TXTebook_format.py
+# Usage: python ./txtebook_format.py
 """
 
 import re
