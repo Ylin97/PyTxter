@@ -4,9 +4,9 @@
 
 import sys
 import copy
-from PyQt5.QtGui import QIcon, QKeySequence, QFont
-from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QFileDialog,\
-    QPlainTextEdit, QMessageBox, QFontDialog
+from PyQt5.QtGui import QIcon, QKeySequence, QFont, QTextCursor
+from PyQt5.QtWidgets import QApplication, QBoxLayout, QDialog, QGridLayout, QLabel, QLineEdit, QMainWindow, QAction, QFileDialog,\
+    QPlainTextEdit, QMessageBox, QFontDialog, QPushButton
 from tools import *
 from format import *
 
@@ -21,6 +21,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.text_origin = ''                         # 文件原始内容
+        self.last_search = ''
         self.file_path = './Untitled.txt'
         self.file_name = 'Untitled.txt'
         self.file_codec = 'utf-8'
@@ -53,13 +54,16 @@ class MainWindow(QMainWindow):
         self.text.setFont(self.font)
         self.setWindowTitle('Untitled.txt')
         self.show_statusbar_msg()
-        self.text.textChanged.connect(self.text_changed)  # 实时监控编辑区内容是否发生更改
 
         # 菜单项
         self.create_file_menu()
         self.create_edit_menu()
         self.create_format_menu()
         self.create_help_menu()
+
+        # 信号绑定
+        self.text.textChanged.connect(self.text_changed)  # 实时监控编辑区内容是否发生更改
+        self.text.textChanged.connect(self.find_enable) 
 
         # 显示
         self.show()
@@ -206,39 +210,44 @@ class MainWindow(QMainWindow):
         """创建编辑菜单"""
         menu = self.menuBar().addMenu("编辑(&E)")
 
-        click2format        = menu.addAction("一键格式化(&G)", self.click2format_triggered)
-        chapter_name_format = menu.addAction("章节名格式化", self.chapter_name_format_triggered)
-        clean_null_line     = menu.addAction("清除空白行", self.clean_null_line_triggered)
-        ban_char_replace    = menu.addAction("屏蔽字替换", self.ban_char_replace_triggered)
-        punc_replace        = menu.addAction("中英标点纠正", self.punctuation_correct_triggered)
+        click2format_act   = menu.addAction("一键格式化(&G)", self.click2format_triggered)
+        chapter_name_act   = menu.addAction("章节名格式化", self.chapter_name_format_triggered)
+        clean_line_act     = menu.addAction("清除空白行", self.clean_null_line_triggered)
+        ban_char_act       = menu.addAction("屏蔽字替换", self.ban_char_replace_triggered)
+        punc_replace_act   = menu.addAction("中英标点纠正", self.punctuation_correct_triggered)
         menu.addSeparator() 
-        revokeEdit          = menu.addAction("撤销(&U)", self.revoke_triggered)
-        recoveryEdit        = menu.addAction("恢复(&R)", self.recovery_triggered)
-        cutEdit             = menu.addAction("剪切(&T)", self.cut_triggered)
-        copyEdit            = menu.addAction("复制(&C)", self.copy_triggered)
-        pasteEdit           = menu.addAction("粘贴(&P)", self.paste_triggered)
+        revoke_act         = menu.addAction("撤销(&U)", self.text.undo)
+        recovery_act       = menu.addAction("恢复(&R)", self.text.redo)
+        cut_act            = menu.addAction("剪切(&T)", self.text.cut)
+        copy_act           = menu.addAction("复制(&C)", self.text.copy)
+        paste_act          = menu.addAction("粘贴(&P)", self.text.paste)
         menu.addSeparator()
-        findEdit            = menu.addAction("查找(&F)", self.find_triggered)
-        findNextEdit        = menu.addAction("查找下一个(&N)")
-        replaceEdit         = menu.addAction("替换(&E)...")
-        # gotoEdit            = menu.addAction("转到(&D)...")
+        self.find_act      = menu.addAction("查找(&F)", self.find_triggered)
+        self.find_next_act = menu.addAction("查找下一个(&N)")
+        replace_act        = menu.addAction("替换(&E)", self.replace_triggered)
+        # goto_act         = menu.addAction("转到(&D)...")
         menu.addSeparator()
-        checkAllEdit        = menu.addAction("全选(&A)")
-        clean               = menu.addAction("清空编辑区(&L)", self.clean_triggered)
-        recovery2origin     = menu.addAction("还原文件内容", self.recovery2origin)
+        check_all_act      = menu.addAction("全选(&A)")
+        clean_act          = menu.addAction("清空编辑区(&L)", self.text.clear)
+        re2origin_act      = menu.addAction("还原文件内容", self.recovery2origin)
 
-        click2format.setShortcut("Ctrl+G")
-        revokeEdit.setShortcut("Ctrl+Z") #设置快捷键
-        recoveryEdit.setShortcut("Ctrl+Shift+Z")
-        cutEdit.setShortcut("Ctrl+X")
-        copyEdit.setShortcut("Ctrl+C")
-        pasteEdit.setShortcut("Ctrl+V")
-        clean.setShortcut("Ctrl+L")
-        findEdit.setShortcut("Ctrl+F")
-        findNextEdit.setShortcut("F3")
-        replaceEdit.setShortcut("Ctrl+H")
+        # 动作属性设置
+        self.find_act.setEnabled(False)  # 暂时将find、findnex设置为无效，有效时再激活
+        self.find_next_act.setEnabled(False)
+
+        # 绑定快捷键
+        click2format_act.setShortcut("Ctrl+G")
+        revoke_act.setShortcut("Ctrl+Z") #设置快捷键
+        recovery_act.setShortcut("Ctrl+Shift+Z")
+        cut_act.setShortcut("Ctrl+X")
+        copy_act.setShortcut("Ctrl+C")
+        paste_act.setShortcut("Ctrl+V")
+        clean_act.setShortcut("Ctrl+L")
+        self.find_act.setShortcut("Ctrl+F")
+        self.find_next_act.setShortcut("F3")
+        replace_act.setShortcut("Ctrl+H")
         # gotoEdit.setShortcut("Ctrl+G")
-        checkAllEdit.setShortcut("Ctrl+A")
+        check_all_act.setShortcut("Ctrl+A")
 
     def click2format_triggered(self):
         """一键格式化会话"""
@@ -293,36 +302,147 @@ class MainWindow(QMainWindow):
         self.is_modified = True
 
     def find_triggered(self):
-        """查找会话"""
-        print('查找')
+        """查找字符串"""
+        self.find_dialog = QDialog(self)
+        self.find_dialog.setWindowTitle('查找')
+        search_label = QLabel('查找：')
+        self.search_text = QLineEdit(self.last_search)
+        search_label.setBuddy(self.search_text)
+        self.search_btn = QPushButton('查找下一个')
+        self.search_btn.setDefault(True)
+
+        layout = QBoxLayout(QBoxLayout.LeftToRight)
+        layout.addWidget(search_label)
+        layout.addWidget(self.search_text)
+        layout.addWidget(self.search_btn)
+
+        self.search_btn.clicked.connect(self.search_triggered)
+        self.find_dialog.setLayout(layout)
+        self.find_dialog.show()
+
+    def find_enable(self):
+        # 当textEdit不为空时，findAction才生效
+        if self.text.toPlainText():
+            self.find_act.setEnabled(True)
+        else:
+            self.find_act.setEnabled(False)
+            self.find_next_act.setEnabled(False)
+
+    def search_triggered(self):
+        """查找字符串"""
+        # print('查找')
+        cursor = self.text.textCursor()
+        start = cursor.anchor()
+        text = self.search_text.text()
+        # 上一次查找的字符串
+        self.last_search = text
+        # 根据条件判断是否激活findNextAction
+        if self.last_search:
+            self.find_next_act.setEnabled(True)
+        text_len = len(text)
+        context = self.text.toPlainText()
+        # 先在文本中进行查找，判断字符串是否存在
+        index = context.find(text, start)
+        if -1 == index:
+            QMessageBox.information(
+                self.find_dialog, '记事本', '找不到\"%s\"' % text)
+        else:
+            start = index
+            cursor = self.text.textCursor()
+            cursor.clearSelection()
+            cursor.movePosition(QTextCursor.Start, QTextCursor.MoveAnchor)
+            # 向右多移动字符串长度
+            cursor.movePosition(QTextCursor.Right, QTextCursor.MoveAnchor, start + text_len)
+            # 同时anchor、position同时左移字符串长度
+            cursor.movePosition(QTextCursor.Left, QTextCursor.KeepAnchor, text_len)
+            cursor.selectedText()
+            self.text.setTextCursor(cursor)
 
     def replace_triggered(self):
         """替换"""
-        print('替换')
+        # print('替换')
+        self.replace_dialog = QDialog(self)
+        self.replace_dialog.setWindowTitle('替换')
+        search_label = QLabel('查找内容：')
+        self.search_text = QLineEdit()
+        search_label.setBuddy(self.search_text)
+        replace_label = QLabel('替换为：')
+        # 默认替换为空格
+        self.replace_text = QLineEdit()
+        replace_label.setBuddy(self.replace_text)
+        self.find_button = QPushButton('查找下一个')
+        self.replace_button = QPushButton('替换')
+        self.replace_all_button = QPushButton('全部替换')
 
-    def revoke_triggered(self):
-        """撤销"""
-        self.text.undo()
+        self.replace_button.setEnabled(False)
+        self.replace_all_button.setEnabled(False)
 
-    def recovery_triggered(self):
-        """恢复"""
-        self.text.redo()
+        self.find_button.clicked.connect(self.replaceText)
+        self.replace_button.clicked.connect(self.replaceText)
+        self.replace_all_button.clicked.connect(self.replace_all)
+        self.search_text.textChanged.connect(self.replace_enable)
 
-    def cut_triggered(self):
-        """剪切"""
-        self.text.cut()
+        layout = QGridLayout()
+        layout.addWidget(search_label, 0, 0)
+        layout.addWidget(self.search_text, 0, 1)
+        layout.addWidget(self.find_button, 0, 2)
+        layout.addWidget(replace_label, 1, 0)
+        layout.addWidget(self.replace_text, 1, 1)
+        layout.addWidget(self.replace_button, 1, 2)
+        layout.addWidget(self.replace_all_button, 2, 2)
+        self.replace_dialog.setLayout(layout)
+        self.replace_dialog.show()
 
-    def copy_triggered(self):
-        """复制"""
-        self.text.copy()
+    def replace_enable(self):
+        if not self.search_text.text():
+            self.replace_button.setEnabled(False)
+            self.replace_all_button.setEnabled(False)
+        else:
+            self.replace_button.setEnabled(True)
+            self.replace_all_button.setEnabled(True)
 
-    def paste_triggered(self):
-        """粘贴"""
-        self.text.paste()
+    def replaceText(self):
+        cursor = self.text.textCursor()
+        start = cursor.anchor()
+        text = self.search_text.text()
+        text_len = len(text)
+        context = self.text.toPlainText()
+        index = context.find(text, start)
+        sender = self.sender()
+        # 如果sender是替换按钮，替换选中文字
+        if sender is self.replace_button:
+            if text == cursor.selectedText():
+                position = cursor.anchor()
+                cursor.removeSelectedText()
+                replace_text = self.replace_text.text()
+                cursor.insertText(replace_text)
+                # 替换文字后要重新搜索，这个时候cursor还未修改
+                self.replaceText()
+                return
+        if -1 == index:
+            QMessageBox.information(
+                self.replace_dialog, '记事本', '找不到\"%s\"' % text)
+        else:
+            start = index
+            cursor = self.text.textCursor()
+            cursor.clearSelection()
+            cursor.movePosition(QTextCursor.Start, QTextCursor.MoveAnchor)
+            cursor.movePosition(QTextCursor.Right, QTextCursor.MoveAnchor, start + text_len)
+            cursor.movePosition(QTextCursor.Left, QTextCursor.KeepAnchor, text_len)
+            cursor.selectedText()
+            self.text.setTextCursor(cursor)
 
-    def clean_triggered(self):
-        """清空编辑区"""
-        self.text.clear()
+    def replace_all(self):
+        context = self.text.toPlainText()
+        search_word = self.search_text.text()
+        replace_word = self.replace_text.text()
+        new_context = context.replace(search_word, replace_word)
+        doc = self.text.document()
+        curs = QTextCursor(doc)
+        # 选择整个文档
+        curs.select(QTextCursor.Document)
+        # curs.removeSelectedText()
+        curs.insertText(new_context)
 
     def recovery2origin(self):
         """还原编辑区到初始态"""
@@ -376,7 +496,11 @@ class MainWindow(QMainWindow):
 
     def about_triggered(self):
         """关于会话"""
-        about_text = "<center>这是一个txt小说编辑器</center><p>版本：0.01 beta</p>"
+        about_text = """
+                    <center>这是一个txt小说编辑器</center><p>版本：0.01 beta</p>
+                    <p>感谢以下项目：</p>
+                    <p>likui911: https://github.com/likui911/notepad_pyqt5</p>
+                    """
         QMessageBox.about(window, '说明', about_text)
 
     """--------------辅助方法-------------------
