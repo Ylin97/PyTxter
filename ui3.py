@@ -54,8 +54,8 @@ class MainWindow(QMainWindow):
         self.config.read_settings()
 
         # self.setMinimumSize(1000, 800)
-        self.font = QFont()
-        self.text.setFont(self.font)
+        # self.font = QFont()
+        # self.text.setFont(self.font)
         self.setWindowTitle('Untitled.txt')
         self.setWindowIcon(QIcon('icons/notepad.png'))
         self.show_statusbar_msg()
@@ -520,9 +520,9 @@ class MainWindow(QMainWindow):
         self.word_wrap.setChecked(True)
     
     def font_select_triggered(self):
-        font, ok = QFontDialog.getFont(self.font)
+        font, ok = QFontDialog.getFont(self.text.font(), self, '字体')
         if ok:
-            self.font = font
+            # self.font = font
             self.text.setFont(font)
         self.show_statusbar_msg()
     
@@ -654,6 +654,7 @@ class Config:
         font.setStrikeOut(int(self.font_strikeOut))
         font.setUnderline(int(self.font_underline))
         self.text.setFont(font)
+        # self.window.font = font
 
     def write_setting(self):
         """写入用户自定义设置信息到配置文件"""
