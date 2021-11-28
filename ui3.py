@@ -375,18 +375,29 @@ class MainWindow(QMainWindow):
         cur.setPosition(start + length, QTextCursor.KeepAnchor)
         self.text.setTextCursor(cur)
 
-    def search_triggered(self):
-        """查找字符串"""
+    def search_triggered(self, key_word = None):
+        """查找字符串
+        Args:
+            key_word: 将要搜索的关键字
+        Return:
+            start: 要替换字符串的在编辑区文本中的开始位置，
+                   -1 表示未找到， -2 表示为输入关键字
+        """
         # print('查找')
-        key_word = self.search_qle.text()
+        start = -1
+        if not key_word:
+            key_word = self.search_qle.text()
+            if len(key_word) == 0:  # 没有输入查找关键字
+                QMessageBox.warning(self, '警告', '请输入查找关键字！', QMessageBox.Ok)
+                return -2
         if key_word != self.search_key:
             self.search_key = key_word
             self.search_count = 0
             self.search_current = 0
         if not self.search_content:
             self.search_content = self.text.toPlainText()
-        if not self.search_count:
-            self.search_count = self.search_content.count(key_word)
+        if not self.search_count:  # 第一次查找
+            self.search_count = self.search_content.count(key_word) 
             if self.search_count != 0:
                 start = self.search_content.index(key_word)
                 self.select(start, len(key_word))
@@ -408,6 +419,7 @@ class MainWindow(QMainWindow):
                     self.search_triggered()
         self.text.setFocus()
         self.statusBar().showMessage("匹配[{}/{}]".format(self.search_current, self.search_count))
+        return start
 
     def replace_triggered(self):
         """替换"""
@@ -458,7 +470,8 @@ class MainWindow(QMainWindow):
         text = self.search_qle.text()
         text_len = len(text)
         context = self.text.toPlainText()
-        index = context.find(text, start)
+        # index = context.find(text, start)
+        index = self.search_triggered(text)
         sender = self.sender()
         # 如果sender是替换按钮，替换选中文字
         if sender is self.replace_button:
