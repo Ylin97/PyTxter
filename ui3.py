@@ -10,8 +10,8 @@ import configparser
 
 from PyQt5.QtCore import QTextCodec
 from PyQt5.QtGui import QIcon, QKeySequence, QFont, QTextCursor
-from PyQt5.QtWidgets import QApplication, QBoxLayout, QDialog, QGridLayout, QLabel, QLineEdit, QMainWindow,\
-    QPlainTextEdit, QMessageBox, QFontDialog, QPushButton, QAction, QFileDialog
+from PyQt5.QtWidgets import QApplication, QBoxLayout, QDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMainWindow,\
+    QPlainTextEdit, QMessageBox, QFontDialog, QPushButton, QAction, QFileDialog, QVBoxLayout, QWidget
 # from tools import *
 from format import *
 
@@ -35,6 +35,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
         self.text_origin = ''                         # 文件原始内容
         self.last_search = ''
+        self.last_goto = 1
         self.file_path = './Untitled.txt'
         self.file_name = 'Untitled.txt'
         self.file_codec = 'utf-8'
@@ -258,7 +259,7 @@ class MainWindow(QMainWindow):
         self.find_act         = menu.addAction("查找(&F)", self.find_triggered)
         self.find_next_act    = menu.addAction("查找下一个(&N)")
         replace_act           = menu.addAction("替换(&E)", self.replace_triggered)
-        # goto_act            = menu.addAction("转到(&D)...")
+        goto_act              = menu.addAction("转到(&D)...", self.goto)
         menu.addSeparator()
         check_all_act         = menu.addAction("全选(&A)", self.text.selectAll)
         self.clean_act        = menu.addAction("清空编辑区(&L)", self.text.clear)
@@ -286,7 +287,8 @@ class MainWindow(QMainWindow):
         """一键格式化会话"""
         text = auto_format(self.get_lines())
         # self.text.clear()
-        self.text.setPlainText(text)
+        # self.text.setPlainText(text)
+        self.update_edit_content(text)
         self.show_statusbar_msg()
         self.is_modified = True
 
@@ -299,7 +301,8 @@ class MainWindow(QMainWindow):
         for line in lines:
             if line:
                 text += line
-        self.text.setPlainText(text)
+        # self.text.setPlainText(text)
+        self.update_edit_content(text)
         self.statusBar().showMessage("格式化章节名成功！", 2000)
         self.show_statusbar_msg()
         self.is_modified = True
@@ -311,7 +314,8 @@ class MainWindow(QMainWindow):
         text = ''
         for line in lines:
             text += line
-        self.text.setPlainText(text)
+        # self.text.setPlainText(text)
+        self.update_edit_content(text)
         # self.text.document().setModified(True)
         self.statusBar().showMessage('清除空白行成功！', 2000)
         self.show_statusbar_msg()
@@ -330,7 +334,8 @@ class MainWindow(QMainWindow):
         text = ''
         for line in lines:
             text += line
-        self.text.setPlainText(text)
+        # self.text.setPlainText(text)
+        self.update_edit_content(text)
         self.statusBar().showMessage('标点纠正成功！', 2000)
         self.show_statusbar_msg()
         self.is_modified = True
@@ -511,7 +516,42 @@ class MainWindow(QMainWindow):
     def goto(self):
         """跳转到指定行"""
         #TODO:参考 test/test007.py
-        pass
+        goto_dialog = QDialog(self)
+        goto_dialog.setWindowTitle('跳转')
+
+        goto_label = QLabel('跳转:')
+        self.goto_qle = QLineEdit(str(self.last_goto))
+        goto_label.setBuddy(self.goto_qle)
+        self.goto_btn = QPushButton('确定')
+        self.goto_btn.setDefault(True)
+        self.goto_btn.clicked.connect(self.goto_confirm_triggered)
+
+        goto_layout = QBoxLayout(QBoxLayout.LeftToRight)
+        goto_layout.addWidget(goto_label)
+        goto_layout.addWidget(self.goto_qle)
+        goto_layout.addWidget(self.goto_btn)
+        
+        goto_dialog.setLayout(goto_layout)
+        goto_dialog.show()
+        
+    def goto_confirm_triggered(self):
+        """跳转行确定"""
+        print('goto line')
+        text = self.goto_qle.text()
+        try:
+            n = int(text)
+        except ValueError:
+            print("Cannot convert '{}' to integer number".format(text))
+        else:
+            if n < 1:
+                print("The number must be greater than 1")
+                return
+            doc = self.text.document()
+            self.text.setFocus()
+            if n > doc.blockCount():
+                self.text.insertPlainText("\n" * (n - doc.blockCount()))
+            cursor = QTextCursor(doc.findBlockByLineNumber(n - 1))
+            self.text.setTextCursor(cursor)
 
     def recovery2origin(self):
         """还原编辑区到初始态"""
@@ -615,6 +655,11 @@ class MainWindow(QMainWindow):
     def get_lines(self) ->list:
         """拆分行"""
         return [line + '\n' for line in self.text.toPlainText().split('\n')]
+
+    def update_edit_content(self, text: str):
+        """更新编辑区内容"""
+        self.text.selectAll()
+        self.text.insertPlainText(text)
 
     def show_statusbar_msg(self):
         """状态栏常留信息"""
