@@ -508,6 +508,11 @@ class MainWindow(QMainWindow):
         # curs.removeSelectedText()
         curs.insertText(new_context)
 
+    def goto(self):
+        """跳转到指定行"""
+        #TODO:参考 test/test007.py
+        pass
+
     def recovery2origin(self):
         """还原编辑区到初始态"""
         self.text.setPlainText(self.text_origin)
