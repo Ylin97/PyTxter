@@ -8,11 +8,12 @@ import copy
 import ctypes
 import configparser
 
-from PyQt5.QtCore import QTextCodec
-from PyQt5.QtGui import QIcon, QKeySequence, QFont, QTextCursor
+from PyQt5.QtCore import Qt, QRect, QSize, QTextCodec
+from PyQt5.QtGui import QColor, QIcon, QKeySequence, QFont, QPainter, QTextCursor, QTextFormat
 from PyQt5.QtWidgets import QApplication, QBoxLayout, QDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMainWindow,\
-    QPlainTextEdit, QMessageBox, QFontDialog, QPushButton, QAction, QFileDialog, QVBoxLayout, QWidget
+    QPlainTextEdit, QMessageBox, QFontDialog, QPushButton, QAction, QFileDialog, QTextEdit, QVBoxLayout, QWidget
 # from tools import *
+from qcodeeditor import QCodeEditor
 from format import *
 
 
@@ -46,7 +47,8 @@ class MainWindow(QMainWindow):
         """初始化主界面"""
 
         # 初始化主界面
-        self.text = QPlainTextEdit()   # 定义一个文本编辑器
+        # self.text = QPlainTextEdit()   # 定义一个文本编辑器
+        self.text = QCodeEditor()
         self.setCentralWidget(self.text)
         # 载入配置信息
         self.config = Config(self, self.text)
