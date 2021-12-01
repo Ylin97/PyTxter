@@ -1,6 +1,6 @@
 from PyQt5.QtCore import Qt, QRect, QSize
 from PyQt5.QtWidgets import QWidget, QPlainTextEdit, QTextEdit
-from PyQt5.QtGui import QColor, QPainter, QTextFormat
+from PyQt5.QtGui import QColor, QFont, QPainter, QTextFormat
 
 
 class QCodeEditor(QPlainTextEdit):
@@ -51,7 +51,7 @@ class QCodeEditor(QPlainTextEdit):
  
     def lineNumberAreaPaintEvent(self, event):
         painter = QPainter(self.lineNumberArea)
-        color = QColor("#f2f2f2")
+        color = QColor("#f0f0f0")
         # painter.fillRect(event.rect(), Qt.lightGray)
         painter.fillRect(event.rect(), color)
  
@@ -65,8 +65,10 @@ class QCodeEditor(QPlainTextEdit):
         while block.isValid() and (top <= event.rect().bottom()):
             if block.isVisible() and (bottom >= event.rect().top()):
                 number = str(blockNumber + 1)
-                painter.setPen(Qt.black)
+                painter.setPen(QColor("#008080"))
+                painter.setFont(QFont('Consolas', 9))
                 painter.drawText(0, top, self.lineNumberArea.width(), height, Qt.AlignRight, number)
+                # painter.drawText(0, top, self.lineNumberArea.width(), height, Qt.AlignCenter, number)
  
             block = block.next()
             top = bottom
