@@ -2,13 +2,23 @@
 # coding=utf-8
 
 
+import os
 import sys
 import copy
-from PyQt5.QtGui import QIcon, QKeySequence, QFont, QTextCursor
-from PyQt5.QtWidgets import QApplication, QBoxLayout, QDialog, QGridLayout, QLabel, QLineEdit, QMainWindow,\
-    QPlainTextEdit, QMessageBox, QFontDialog, QPushButton, QAction, QFileDialog
+import ctypes
+import configparser
+
+from PyQt5.QtCore import Qt, QRect, QSize, QTextCodec
+from PyQt5.QtGui import QColor, QIcon, QKeySequence, QFont, QPainter, QTextCursor, QTextFormat
+from PyQt5.QtWidgets import QApplication, QBoxLayout, QDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMainWindow,\
+    QPlainTextEdit, QMessageBox, QFontDialog, QPushButton, QAction, QFileDialog, QTextEdit, QVBoxLayout, QWidget
 # from tools import *
+from qcodeeditor import QCodeEditor
 from format import *
+
+
+# 常量
+CONFIG_FILE_PATH = "notepad.ini"
 
 # Global variable
 # file_path = '.\\未命名文件.txt'
@@ -16,43 +26,41 @@ from format import *
 # file_codec = 'utf-8'
 # is_modified = False
 
+# 解决任务栏图标问题
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("notepad")
+QTextCodec.setCodecForLocale(QTextCodec.codecForName("utf-8"))
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.text_origin = ''                         # 文件原始内容
         self.last_search = ''
+        self.last_goto = 1
         self.file_path = './Untitled.txt'
         self.file_name = 'Untitled.txt'
         self.file_codec = 'utf-8'
         self.is_modified = False
         self.initUI()
 
-    def closeEvent(self, a0) -> None:
-        """关闭事件"""
-        if self.file_name == 'Untitled.txt' and self.text.toPlainText().isspace():
-            return
-        if not self.is_modified:
-            return
-        answer = QMessageBox.question(self, '退出程序', '文件已修改，退出程序前是否保存文件？',
-                                      QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
-                                      )
-        # print(answer)
-        if answer & QMessageBox.Save:
-            self.save_triggered()
-        elif answer & QMessageBox.Cancel:
-            a0.ignore()
-
     def initUI(self):
         """初始化主界面"""
 
         # 初始化主界面
-        self.setMinimumSize(1000, 800)
-        self.text = QPlainTextEdit()   # 定义一个文本编辑器
+        # self.text = QPlainTextEdit()   # 定义一个文本编辑器
+        self.text = QCodeEditor()
         self.setCentralWidget(self.text)
-        self.font = QFont()
-        self.text.setFont(self.font)
+        # 载入配置信息
+        self.config = Config(self, self.text)
+        # self.font_cfg = MyFont()
+        self.config.judge_config()
+        self.config.read_settings()
+
+        # self.setMinimumSize(1000, 800)
+        # self.font = QFont()
+        # self.text.setFont(self.font)
         self.setWindowTitle('Untitled.txt')
+        self.setWindowIcon(QIcon('icons/notepad.png'))
         self.show_statusbar_msg()
 
         # 菜单项
@@ -61,6 +69,8 @@ class MainWindow(QMainWindow):
         self.create_format_menu()
         self.create_help_menu()
 
+        # 工具栏
+        self.create_toolbar()
         # 搜索相关项
         self.search_content = ''
         self.search_key = None
@@ -75,6 +85,25 @@ class MainWindow(QMainWindow):
         # 显示
         self.show()
 
+    def closeEvent(self, a0) -> None:
+        """关闭事件"""
+        if self.file_name == 'Untitled.txt' and self.text.toPlainText().isspace():
+            self.config.write_setting()
+            return
+        if not self.is_modified:
+            self.config.write_setting()
+            return
+        answer = QMessageBox.question(self, '退出程序', '文件已修改，退出程序前是否保存文件？',
+                                      QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
+                                      )
+        # print(answer)
+        if answer & QMessageBox.Save:
+            self.save_triggered()
+        elif answer & QMessageBox.Cancel:
+            a0.ignore()
+        # 写入配置文件
+        self.config.write_setting()
+
     """---------------文件菜单-------------------
     # DATE: 2021/11/14 Sun
     # Author: Yalin
@@ -85,19 +114,19 @@ class MainWindow(QMainWindow):
         """创建文件菜单"""
         menu = self.menuBar().addMenu("文件(&F)")
 
-        new_file         = menu.addAction("新建(&N)", self.new_file_triggered)
-        open_file        = menu.addAction("打开(&O)", self.open_file_triggered)
-        save_file        = menu.addAction("保存(&S)", self.save_triggered)
-        save_fileas      = menu.addAction("另存为(&A)...", self.save_as_triggered)
+        self.new_act     = menu.addAction("新建(&N)", self.new_file_triggered)
+        self.open_act    = menu.addAction("打开(&O)", self.open_file_triggered)
+        self.save_act    = menu.addAction("保存(&S)", self.save_triggered)
+        self.saveas_act  = menu.addAction("另存为(&A)...", self.save_as_triggered)
         save2utf8        = menu.addAction("以utf-8编码保存", self.save2utf8_triggered)
         save2utf8bom     = menu.addAction("以utf-8 with BOM保存", self.save2utf8bom_triggered)
         exit_file        = menu.addAction("退出(&X)", self.close)
 
         # 绑定快捷键
-        new_file. setShortcut("Ctrl+N")
-        open_file.setShortcut("Ctrl+O")
-        save_file.setShortcut("Ctrl+S")
-        save_fileas.setShortcut("Ctrl+Shift+S")
+        self.new_act. setShortcut("Ctrl+N")
+        self.open_act.setShortcut("Ctrl+O")
+        self.save_act.setShortcut("Ctrl+S")
+        self.saveas_act.setShortcut("Ctrl+Shift+S")
         exit_file.setShortcut(QKeySequence.Quit)
 
     def new_file_triggered(self):
@@ -217,39 +246,39 @@ class MainWindow(QMainWindow):
         """创建编辑菜单"""
         menu = self.menuBar().addMenu("编辑(&E)")
 
-        click2format_act   = menu.addAction("一键格式化(&G)", self.click2format_triggered)
-        chapter_name_act   = menu.addAction("章节名格式化", self.chapter_name_format_triggered)
-        clean_line_act     = menu.addAction("清除空白行", self.clean_null_line_triggered)
-        ban_char_act       = menu.addAction("屏蔽字替换", self.ban_char_replace_triggered)
-        punc_replace_act   = menu.addAction("中英标点纠正", self.punctuation_correct_triggered)
+        self.click2format_act = menu.addAction("一键格式化(&G)", self.click2format_triggered)
+        self.chapter_name_act = menu.addAction("章节名格式化", self.chapter_name_format_triggered)
+        self.clean_line_act   = menu.addAction("清除空白行", self.clean_null_line_triggered)
+        ban_char_act          = menu.addAction("屏蔽字替换", self.ban_char_replace_triggered)
+        self.punc_replace_act = menu.addAction("中英标点纠正", self.punctuation_correct_triggered)
         menu.addSeparator() 
-        revoke_act         = menu.addAction("撤销(&U)", self.text.undo)
-        recovery_act       = menu.addAction("恢复(&R)", self.text.redo)
-        cut_act            = menu.addAction("剪切(&T)", self.text.cut)
-        copy_act           = menu.addAction("复制(&C)", self.text.copy)
-        paste_act          = menu.addAction("粘贴(&P)", self.text.paste)
+        self.undo_act       = menu.addAction("撤销(&U)", self.text.undo)
+        self.redo_act     = menu.addAction("恢复(&R)", self.text.redo)
+        self.cut_act          = menu.addAction("剪切(&T)", self.text.cut)
+        self.copy_act         = menu.addAction("复制(&C)", self.text.copy)
+        self.paste_act        = menu.addAction("粘贴(&P)", self.text.paste)
         menu.addSeparator()
-        self.find_act      = menu.addAction("查找(&F)", self.find_triggered)
-        self.find_next_act = menu.addAction("查找下一个(&N)")
-        replace_act        = menu.addAction("替换(&E)", self.replace_triggered)
-        # goto_act         = menu.addAction("转到(&D)...")
+        self.find_act         = menu.addAction("查找(&F)", self.find_triggered)
+        self.find_next_act    = menu.addAction("查找下一个(&N)")
+        replace_act           = menu.addAction("替换(&E)", self.replace_triggered)
+        goto_act              = menu.addAction("转到(&D)...", self.goto)
         menu.addSeparator()
-        check_all_act      = menu.addAction("全选(&A)")
-        clean_act          = menu.addAction("清空编辑区(&L)", self.text.clear)
-        re2origin_act      = menu.addAction("还原文件内容", self.recovery2origin)
+        check_all_act         = menu.addAction("全选(&A)", self.text.selectAll)
+        self.clean_act        = menu.addAction("清空编辑区(&L)", self.text.clear)
+        self.re2origin_act    = menu.addAction("还原文件内容", self.recovery2origin)
 
         # 动作属性设置
         self.find_act.setEnabled(False)  # 暂时将find、findnex设置为无效，有效时再激活
         self.find_next_act.setEnabled(False)
 
         # 绑定快捷键
-        click2format_act.setShortcut("Ctrl+G")
-        revoke_act.setShortcut("Ctrl+Z") #设置快捷键
-        recovery_act.setShortcut("Ctrl+Shift+Z")
-        cut_act.setShortcut("Ctrl+X")
-        copy_act.setShortcut("Ctrl+C")
-        paste_act.setShortcut("Ctrl+V")
-        clean_act.setShortcut("Ctrl+L")
+        self.click2format_act.setShortcut("Ctrl+G")
+        self.undo_act.setShortcut("Ctrl+Z") #设置快捷键
+        self.redo_act.setShortcut("Ctrl+Shift+Z")
+        self.cut_act.setShortcut("Ctrl+X")
+        self.copy_act.setShortcut("Ctrl+C")
+        self.paste_act.setShortcut("Ctrl+V")
+        self.clean_act.setShortcut("Ctrl+L")
         self.find_act.setShortcut("Ctrl+F")
         self.find_next_act.setShortcut("F3")
         replace_act.setShortcut("Ctrl+H")
@@ -259,7 +288,9 @@ class MainWindow(QMainWindow):
     def click2format_triggered(self):
         """一键格式化会话"""
         text = auto_format(self.get_lines())
-        self.text.setPlainText(text)
+        # self.text.clear()
+        # self.text.setPlainText(text)
+        self.update_edit_content(text)
         self.show_statusbar_msg()
         self.is_modified = True
 
@@ -272,7 +303,8 @@ class MainWindow(QMainWindow):
         for line in lines:
             if line:
                 text += line
-        self.text.setPlainText(text)
+        # self.text.setPlainText(text)
+        self.update_edit_content(text)
         self.statusBar().showMessage("格式化章节名成功！", 2000)
         self.show_statusbar_msg()
         self.is_modified = True
@@ -284,7 +316,8 @@ class MainWindow(QMainWindow):
         text = ''
         for line in lines:
             text += line
-        self.text.setPlainText(text)
+        # self.text.setPlainText(text)
+        self.update_edit_content(text)
         # self.text.document().setModified(True)
         self.statusBar().showMessage('清除空白行成功！', 2000)
         self.show_statusbar_msg()
@@ -303,7 +336,8 @@ class MainWindow(QMainWindow):
         text = ''
         for line in lines:
             text += line
-        self.text.setPlainText(text)
+        # self.text.setPlainText(text)
+        self.update_edit_content(text)
         self.statusBar().showMessage('标点纠正成功！', 2000)
         self.show_statusbar_msg()
         self.is_modified = True
@@ -348,18 +382,29 @@ class MainWindow(QMainWindow):
         cur.setPosition(start + length, QTextCursor.KeepAnchor)
         self.text.setTextCursor(cur)
 
-    def search_triggered(self):
-        """查找字符串"""
+    def search_triggered(self, key_word = None):
+        """查找字符串
+        Args:
+            key_word: 将要搜索的关键字
+        Return:
+            start: 要替换字符串的在编辑区文本中的开始位置，
+                   -1 表示未找到， -2 表示为输入关键字
+        """
         # print('查找')
-        key_word = self.search_qle.text()
+        start = -1
+        if not key_word:
+            key_word = self.search_qle.text()
+            if len(key_word) == 0:  # 没有输入查找关键字
+                QMessageBox.warning(self, '警告', '请输入查找关键字！', QMessageBox.Ok)
+                return -2
         if key_word != self.search_key:
             self.search_key = key_word
             self.search_count = 0
             self.search_current = 0
         if not self.search_content:
             self.search_content = self.text.toPlainText()
-        if not self.search_count:
-            self.search_count = self.search_content.count(key_word)
+        if not self.search_count:  # 第一次查找
+            self.search_count = self.search_content.count(key_word) 
             if self.search_count != 0:
                 start = self.search_content.index(key_word)
                 self.select(start, len(key_word))
@@ -381,6 +426,7 @@ class MainWindow(QMainWindow):
                     self.search_triggered()
         self.text.setFocus()
         self.statusBar().showMessage("匹配[{}/{}]".format(self.search_current, self.search_count))
+        return start
 
     def replace_triggered(self):
         """替换"""
@@ -431,7 +477,8 @@ class MainWindow(QMainWindow):
         text = self.search_qle.text()
         text_len = len(text)
         context = self.text.toPlainText()
-        index = context.find(text, start)
+        # index = context.find(text, start)
+        index = self.search_triggered(text)
         sender = self.sender()
         # 如果sender是替换按钮，替换选中文字
         if sender is self.replace_button:
@@ -468,6 +515,46 @@ class MainWindow(QMainWindow):
         # curs.removeSelectedText()
         curs.insertText(new_context)
 
+    def goto(self):
+        """跳转到指定行"""
+        #TODO:参考 test/test007.py
+        goto_dialog = QDialog(self)
+        goto_dialog.setWindowTitle('跳转')
+
+        goto_label = QLabel('跳转:')
+        self.goto_qle = QLineEdit(str(self.last_goto))
+        goto_label.setBuddy(self.goto_qle)
+        self.goto_btn = QPushButton('确定')
+        self.goto_btn.setDefault(True)
+        self.goto_btn.clicked.connect(self.goto_confirm_triggered)
+
+        goto_layout = QBoxLayout(QBoxLayout.LeftToRight)
+        goto_layout.addWidget(goto_label)
+        goto_layout.addWidget(self.goto_qle)
+        goto_layout.addWidget(self.goto_btn)
+        
+        goto_dialog.setLayout(goto_layout)
+        goto_dialog.show()
+        
+    def goto_confirm_triggered(self):
+        """跳转行确定"""
+        print('goto line')
+        text = self.goto_qle.text()
+        try:
+            n = int(text)
+        except ValueError:
+            print("Cannot convert '{}' to integer number".format(text))
+        else:
+            if n < 1:
+                print("The number must be greater than 1")
+                return
+            doc = self.text.document()
+            self.text.setFocus()
+            if n > doc.blockCount():
+                self.text.insertPlainText("\n" * (n - doc.blockCount()))
+            cursor = QTextCursor(doc.findBlockByLineNumber(n - 1))
+            self.text.setTextCursor(cursor)
+
     def recovery2origin(self):
         """还原编辑区到初始态"""
         self.text.setPlainText(self.text_origin)
@@ -493,9 +580,9 @@ class MainWindow(QMainWindow):
         self.word_wrap.setChecked(True)
     
     def font_select_triggered(self):
-        font, ok = QFontDialog.getFont(self.font)
+        font, ok = QFontDialog.getFont(self.text.font(), self, '字体')
         if ok:
-            self.font = font
+            # self.font = font
             self.text.setFont(font)
         self.show_statusbar_msg()
     
@@ -521,11 +608,41 @@ class MainWindow(QMainWindow):
     def about_triggered(self):
         """关于会话"""
         about_text = """
-                    <center>这是一个txt小说编辑器</center><p>版本：0.01 beta</p>
-                    <p>感谢以下项目：</p>
-                    <p>likui911: https://github.com/likui911/notepad_pyqt5</p>
+                    <h2 align="center">这是一个txt小说编辑器</h2><center>版本：0.01 beta</center>
+                    <p>by yalin <a href="https://github.com/Ylin97/txtbook-editor">https://github.com/Ylin97/txtbook-editor</a></p>
+                    <h3>感谢以下作者：</h3>
+                    <p>likui911: <a href="https://github.com/likui911/notepad_pyqt5">https://github.com/likui911/notepad_pyqt5</a></p>
+                    <p>Aloe_n: <a href="https://www.cnblogs.com/aloe-n/p/8175757.html">https://www.cnblogs.com/aloe-n/p/8175757.html</a></p>
                     """
-        QMessageBox.about(window, '说明', about_text)
+        QMessageBox.about(window, '关于', about_text)
+
+    """--------------工具栏--------------------
+    # DATA：2021/11/26 22:00
+    # Author: yalin
+    # History: create toolbar
+    """
+    def create_toolbar(self):
+        """创建工具栏"""
+        toolbar = self.addToolBar('File')
+        toolbar.addAction(QIcon('icons/new.svg'),'新建文件', self.new_file_triggered)
+        toolbar.addAction(QIcon('icons/open.svg'), '打开文件', self.open_file_triggered)
+        toolbar.addAction(QIcon('icons/save80.png'), '保存文件', self.save_triggered)
+        toolbar.addSeparator()
+        toolbar.addAction(QIcon('icons/undo.svg'), '撤销', self.text.undo)
+        toolbar.addAction(QIcon('icons/redo.svg'), '重做', self.text.redo)
+        toolbar.addSeparator()
+        toolbar.addAction(QIcon('icons/cut80.png'), '剪切', self.text.cut)
+        toolbar.addAction(QIcon('icons/copy96.png'), '复制', self.text.copy)
+        toolbar.addAction(QIcon('icons/paste96.png'), '粘贴', self.text.paste)
+        toolbar.addAction(QIcon('icons/clear.png'), '清空编辑区', self.text.clear)
+        toolbar.addSeparator()
+        toolbar.addAction(QIcon('icons/punc_trans.svg'), '中英标点纠正', self.punctuation_correct_triggered)
+        toolbar.addAction(QIcon('icons/chpt_name.svg'), '章节名格式化', self.chapter_name_format_triggered)
+        toolbar.addAction(QIcon('icons/clear_line.svg'), '清除空白行', self.clean_null_line_triggered)
+        toolbar.addAction(QIcon('icons/click2format.svg'), '一键格式化', self.click2format_triggered)
+        toolbar.addSeparator()
+        toolbar.addAction(QIcon('icons/reset64.png'), '还原文件内容', self.recovery2origin)
+        
 
     """--------------辅助方法-------------------
     # DATE: 2021/11/25
@@ -541,14 +658,118 @@ class MainWindow(QMainWindow):
         """拆分行"""
         return [line + '\n' for line in self.text.toPlainText().split('\n')]
 
+    def update_edit_content(self, text: str):
+        """更新编辑区内容"""
+        self.text.selectAll()
+        self.text.insertPlainText(text)
+
     def show_statusbar_msg(self):
         """状态栏常留信息"""
         msg2 = f'打开文件 - {self.file_path}  编码：{self.file_codec}'
         self.statusBar().showMessage(msg2)
 
+"""
+# ---------------配置信息------------------
+# DATA: 2021/11/26 21:44
+# Author: yalin
+# History: Create Config and Font class
+"""
+class Config:
+    """配置类"""
+    def __init__(self, main_window: MainWindow, text_obj: QPlainTextEdit) -> None:
+        self.text = text_obj
+        self.window = main_window
+        self.config = configparser.ConfigParser()
+        self.config.read(CONFIG_FILE_PATH, 'utf-8')
+
+        # Font attribute
+        self.font_family = 'Consolas'
+        self.font_size = '16'
+        self.font_bold = 'False'
+        self.font_italic = 'False'
+        self.font_strikeOut = 'False'
+        self.font_underline = 'False'
+
+    def judge_config(self):
+        """如果配置文件不存在，则新建"""
+        if not os.path.exists(CONFIG_FILE_PATH):
+            f = open(CONFIG_FILE_PATH, 'w', encoding='utf-8')
+            f.close()
+
+    def read_settings(self):
+        # 调节窗口大小
+        width = self.get_config('Display', 'width', 1000)
+        height = self.get_config('Display', 'height ', 800)
+        px = self.get_config('Display', 'x', 0)
+        py = self.get_config('Display', 'y', 0)
+        self.window.move(int(px), int(py))
+        self.window.resize(int(width), (height))
+
+        self.default_dir = self.get_config('Setting', 'dir', '')
+
+        self.font_family = self.get_config('Font', 'family', 'Consolas')
+        self.font_size = self.get_config('Font', 'size', '10')
+        self.font_bold = self.get_config('Font', 'bold', '0')
+        self.font_italic = self.get_config('Font', 'italic', '0')
+        self.font_strikeOut = self.get_config('Font', 'strikeOut', '0')
+        self.font_underline = self.get_config('Font', 'underline', '0')
+        font = QFont(self.font_family, int(self.font_size))
+        font.setBold(int(self.font_bold))
+        font.setItalic(int(self.font_italic))
+        font.setStrikeOut(int(self.font_strikeOut))
+        font.setUnderline(int(self.font_underline))
+        self.text.setFont(font)
+        # self.window.font = font
+
+    def write_setting(self):
+        """写入用户自定义设置信息到配置文件"""
+        # 窗口位置信息
+        self.write_config('Display', 'width', str(self.window.size().width()))
+        self.write_config('Display', 'height', str(self.window.size().height()))
+        self.write_config('Display', 'x', str(self.window.pos().x()))
+        self.write_config('Display', 'y', str(self.window.pos().y()))
+
+        self.write_config('Setting', 'dir', self.default_dir)
+
+        self.write_config('Font', 'family', self.text.font().family())
+        self.write_config('Font', 'size', str(self.text.font().pointSize()))
+        self.write_config('Font', 'bold', int(self.text.font().bold()))
+        self.write_config('Font', 'italic', int(self.text.font().italic()))
+        self.write_config('Font', 'strikeOut', int(
+            self.text.font().strikeOut()))
+        self.write_config('Font', 'underline', int(
+            self.text.font().underline()))
+
+        # 写入文件
+        self.config.write(open(CONFIG_FILE_PATH, 'w', encoding='utf-8'))
+
+    def get_config(self, section, key, default):
+        # 返回配置信息，如果获取失败返回默认值
+        try:
+            return self.config[section][key]
+        except:
+            return default
+    
+    def write_config(self, section, key, value):
+        # 向config写入信息
+        if not self.config.has_section(section):
+            self.config.add_section(section)
+        # value必须是str，否则会抛TypeError
+        self.config.set(section, key, str(value))
+
+
+class MyFont:
+    """字体类"""
+    def __init__(self) -> None:
+        self.family = 'Consolas'
+        self.size = '16'
+        self.bold = 'False'
+        self.italic = 'False'
+        self.strikeOut = 'False'
+        self.underline = 'False'
 
 if __name__ == '__main__':
-    app = QApplication([])
+    app = QApplication(sys.argv)
     app.setApplicationName('文本编辑器')
     window = MainWindow()
     sys.exit(app.exec_())
