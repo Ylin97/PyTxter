@@ -10,7 +10,6 @@ CHAPTER_NAME_RE = re.compile(r'第(.{1,9})[章节回卷集部篇]\s*.{0,24}\s')
 # 全局变量
 result_text = ''
 
-
 def detect_encoding(filepath):
     """检测文件编码
     Args:
@@ -269,6 +268,15 @@ def split_paragraph(text_str):
             else:
                 temp_str += st
     return temp_str
+
+
+def get_all_chapter_name(lines: list) -> dict:
+    """获取所有的章节名"""
+    chapter_names = {}
+    for num, line in enumerate(lines):
+        if ischapter_name(line):
+            chapter_names[line.strip()] = num
+    return chapter_names
 
 
 if __name__ == "__main__":

@@ -15,6 +15,7 @@ from PyQt5.QtWidgets import QApplication, QBoxLayout, QDialog, QGridLayout, QHBo
 # from tools import *
 from qcodeeditor import QCodeEditor
 from format import *
+from chapter_tree import TOC
 
 
 # 常量
@@ -40,6 +41,7 @@ class MainWindow(QMainWindow):
         self.file_path = './Untitled.txt'
         self.file_name = 'Untitled.txt'
         self.file_codec = 'utf-8'
+        self.chapter_names = {}
         self.is_modified = False
         self.initUI()
 
@@ -47,9 +49,17 @@ class MainWindow(QMainWindow):
         """初始化主界面"""
 
         # 初始化主界面
-        # self.text = QPlainTextEdit()   # 定义一个文本编辑器
-        self.text = QCodeEditor()
+        # self.text = QPlainTextEdit()             # 定义一个文本编辑器
+        self.text = QCodeEditor()                  # 定义一个编辑器
+        # self.toc = TOC(self, self.chapter_names)   # 定义一个侧边栏
+        # self.setFixedSize
+
+        # mainlayout = QHBoxLayout()            # 定义水平Box布局
+        # mainlayout.addWidget(self.toc)
+        # mainlayout.addWidget(self.text)
+
         self.setCentralWidget(self.text)
+        # self.setCentralWidget(QWidget().setLayout(mainlayout))
         # 载入配置信息
         self.config = Config(self, self.text)
         # self.font_cfg = MyFont()
@@ -164,6 +174,7 @@ class MainWindow(QMainWindow):
             self.is_modified = False
             self.setWindowTitle(self.file_name)
             self.file_path = path
+            self.chapter_names = get_all_chapter_name(self.get_lines())
             self.show_statusbar_msg()
 
     def save_triggered(self, dialog=False):
@@ -538,7 +549,7 @@ class MainWindow(QMainWindow):
         
     def goto_confirm_triggered(self):
         """跳转行确定"""
-        print('goto line')
+        # print('goto line')
         text = self.goto_qle.text()
         try:
             n = int(text)
@@ -551,8 +562,11 @@ class MainWindow(QMainWindow):
             doc = self.text.document()
             self.text.setFocus()
             if n > doc.blockCount():
-                self.text.insertPlainText("\n" * (n - doc.blockCount()))
-            cursor = QTextCursor(doc.findBlockByLineNumber(n - 1))
+            #     self.text.insertPlainText("\n" * (n - doc.blockCount()))
+                cursor = QTextCursor(doc.findBlockByNumber(doc.blockCount() - 1))
+            else:
+            # cursor = QTextCursor(doc.findBlockByLineNumber(n - 1))
+                cursor = QTextCursor(doc.findBlockByNumber(n - 1))
             self.text.setTextCursor(cursor)
 
     def recovery2origin(self):
@@ -650,8 +664,9 @@ class MainWindow(QMainWindow):
     # History: add show_statusbar_msg function
     """
     def text_changed(self):
-        """如果编辑区内容发生更改，则标题栏显示*号"""
+        """如果编辑区内容发生更改，则标题栏显示*号，同时更新章节名记录"""
         self.setWindowTitle('*' + self.file_name)
+        self.chapter_names = get_all_chapter_name(self.get_lines())
         self.is_modified = True
 
     def get_lines(self) ->list:
