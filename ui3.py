@@ -5,6 +5,7 @@
 import os
 import sys
 import copy
+import time
 import ctypes
 import configparser
 
@@ -38,6 +39,8 @@ class MainWindow(QMainWindow):
         self.text_origin = ''                         # 文件原始内容
         self.last_search = ''
         self.last_goto = 1
+        self.last_change_time = 0
+        self.is_working = True   # 定义软件是否处在工作状态
         self.file_path = './Untitled.txt'
         self.file_name = 'Untitled.txt'
         self.file_codec = 'utf-8'
@@ -103,15 +106,19 @@ class MainWindow(QMainWindow):
         self.text.textChanged.connect(self.find_enable) 
         self.text.textChanged.connect(self.reset_search_content)
 
+        # # 启用目录更新查询循环
+        # self.update_toc()
         # 显示
         self.show()
 
     def closeEvent(self, a0) -> None:
         """关闭事件"""
         if self.file_name == 'Untitled.txt' and self.text.toPlainText().isspace():
+            self.is_working = False
             self.config.write_setting()
             return
         if not self.is_modified:
+            self.is_working = False
             self.config.write_setting()
             return
         answer = QMessageBox.question(self, '退出程序', '文件已修改，退出程序前是否保存文件？',
@@ -122,6 +129,8 @@ class MainWindow(QMainWindow):
             self.save_triggered()
         elif answer & QMessageBox.Cancel:
             a0.ignore()
+
+        self.is_working = False
         # 写入配置文件
         self.config.write_setting()
 
@@ -183,6 +192,7 @@ class MainWindow(QMainWindow):
             self.text_origin = copy.copy(text)   # 保存文件原始内容副本
             # self.text.document().setModified(False)
             self.is_modified = False
+            self.last_change_time = 0
             self.setWindowTitle(self.file_name)
             self.file_path = path
             self.chapter_names = get_all_chapter_name(self.get_lines())
@@ -286,7 +296,8 @@ class MainWindow(QMainWindow):
         goto_act              = menu.addAction("转到(&D)...", self.goto)
         menu.addSeparator()
         check_all_act         = menu.addAction("全选(&A)", self.text.selectAll)
-        self.clean_act        = menu.addAction("清空编辑区(&L)", self.text.clear)
+        # self.clean_act        = menu.addAction("清空编辑区(&L)", self.text.clear)
+        self.clean_act        = menu.addAction("清空编辑区(&L)", self.clear_triggered)
         self.re2origin_act    = menu.addAction("还原文件内容", self.recovery2origin)
 
         # 动作属性设置
@@ -581,6 +592,11 @@ class MainWindow(QMainWindow):
                 cursor = QTextCursor(doc.findBlockByNumber(n - 1))
             self.text.setTextCursor(cursor)
 
+    def clear_triggered(self):
+        """清空编辑区"""
+        self.text.selectAll()
+        self.text.insertPlainText('') 
+
     def recovery2origin(self):
         """还原编辑区到初始态"""
         self.text.setPlainText(self.text_origin)
@@ -660,7 +676,7 @@ class MainWindow(QMainWindow):
         toolbar.addAction(QIcon('icons/cut80.png'), '剪切', self.text.cut)
         toolbar.addAction(QIcon('icons/copy96.png'), '复制', self.text.copy)
         toolbar.addAction(QIcon('icons/paste96.png'), '粘贴', self.text.paste)
-        toolbar.addAction(QIcon('icons/clear.png'), '清空编辑区', self.text.clear)
+        toolbar.addAction(QIcon('icons/clear.png'), '清空编辑区', self.clear_triggered)
         toolbar.addSeparator()
         toolbar.addAction(QIcon('icons/punc_trans.svg'), '中英标点纠正', self.punctuation_correct_triggered)
         toolbar.addAction(QIcon('icons/chpt_name.svg'), '章节名格式化', self.chapter_name_format_triggered)
@@ -678,8 +694,11 @@ class MainWindow(QMainWindow):
     def text_changed(self):
         """如果编辑区内容发生更改，则标题栏显示*号，同时更新章节名记录"""
         self.setWindowTitle('*' + self.file_name)
-        self.chapter_names = get_all_chapter_name(self.get_lines())
-        self.toc.update(self.chapter_names)
+        current_time = int(time.time())
+        if 0 == self.last_change_time or 1 < (current_time - self.last_change_time) % 8 < 5:
+            self.chapter_names = get_all_chapter_name(self.get_lines())
+            self.toc.update(self.chapter_names)
+            self.last_change_time = current_time
         self.is_modified = True
 
     def get_lines(self) ->list:
@@ -690,6 +709,16 @@ class MainWindow(QMainWindow):
         """更新编辑区内容"""
         self.text.selectAll()
         self.text.insertPlainText(text)
+
+    def update_toc(self):
+        """更新目录查询循环"""
+        last_change_time = 0
+        while self.is_working:
+            current_time = int(time.time())
+            if 0 == last_change_time or 2 < (current_time - last_change_time) % 8 < 6:
+                self.chapter_names = get_all_chapter_name(self.get_lines())
+                self.toc.update(self.chapter_names)
+                last_change_time = current_time
 
     def show_statusbar_msg(self):
         """状态栏常留信息"""
