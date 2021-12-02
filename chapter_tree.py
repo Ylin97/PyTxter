@@ -1,15 +1,21 @@
 import sys
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTreeWidget, QTreeWidgetItem, QWidget
+from PyQt5.QtWidgets import QApplication, QBoxLayout, QHBoxLayout, QLayout, QMainWindow, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget
 
 
 class TOC(QWidget):
     def __init__(self, parent=None, chapter_names: dict=None) -> None:
         super().__init__(parent)
+        # self.resize(800, 600)
         self.chapter_names = chapter_names
         self.tree = QTreeWidget()
+        # self.tree.setWindowTitle('小说目录')
         self.tree.setColumnCount(1)
         self.tree.setHeaderLabel('目录')
+        # 必须为 self 设置布局，否则 self.tree 不会显示到 TOC 的实例中
+        mainlayout = QVBoxLayout()
+        mainlayout.addWidget(self.tree)
+        self.setLayout(mainlayout)
 
         # 设置根节点
         # self.root = QTreeWidgetItem(self.tree)
@@ -20,7 +26,7 @@ class TOC(QWidget):
         self.tree.clicked.connect(self.clicked_event)
         self.tree.expandAll()
         # self.setCentralWidget(self.tree)
-        self.show()
+        # self.show()
 
     def add_item(self, chapter_name: str):
         """添加目录项"""
@@ -44,5 +50,5 @@ if __name__ == '__main__':
                   '第三章 觉醒': 10}
     app = QApplication(sys.argv)
     tree = TOC(chapter_names=chap_names)
-    # tree.show()
+    tree.show()
     sys.exit(app.exec_())
