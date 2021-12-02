@@ -275,7 +275,7 @@ def get_all_chapter_name(lines: list) -> dict:
     chapter_names = {}
     for num, line in enumerate(lines):
         if ischapter_name(line):
-            chapter_names[line.strip()] = num
+            chapter_names[line.strip()] = num + 1
     return chapter_names
 
 

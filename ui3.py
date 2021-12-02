@@ -28,8 +28,8 @@ CONFIG_FILE_PATH = "notepad.ini"
 # is_modified = False
 
 # 解决任务栏图标问题
-ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("notepad")
-QTextCodec.setCodecForLocale(QTextCodec.codecForName("utf-8"))
+# ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("notepad")
+# QTextCodec.setCodecForLocale(QTextCodec.codecForName("utf-8"))
 
 
 class MainWindow(QMainWindow):
@@ -51,7 +51,7 @@ class MainWindow(QMainWindow):
         # 初始化主界面
         # self.text = QPlainTextEdit()             # 定义一个文本编辑器
         self.text = QCodeEditor()                  # 定义一个编辑器
-        self.toc = TOC(self, self.chapter_names)   # 定义一个侧边栏
+        self.toc = TOC(self)   # 定义一个侧边栏
         # self.setFixedSize
 
         mainlayout = QHBoxLayout()            # 定义水平Box布局
@@ -61,6 +61,8 @@ class MainWindow(QMainWindow):
         splitter = QSplitter(Qt.Horizontal)
         splitter.addWidget(self.toc)
         splitter.addWidget(self.text)
+        splitter.setStretchFactor(0, 1)
+        splitter.setStretchFactor(1, 4)
         mainlayout.addWidget(splitter)
 
         mainwidget = QWidget()
@@ -556,10 +558,11 @@ class MainWindow(QMainWindow):
         goto_dialog.setLayout(goto_layout)
         goto_dialog.show()
         
-    def goto_confirm_triggered(self):
+    def goto_confirm_triggered(self, text=None):
         """跳转行确定"""
         # print('goto line')
-        text = self.goto_qle.text()
+        if not text:
+            text = self.goto_qle.text()
         try:
             n = int(text)
         except ValueError:
@@ -676,6 +679,7 @@ class MainWindow(QMainWindow):
         """如果编辑区内容发生更改，则标题栏显示*号，同时更新章节名记录"""
         self.setWindowTitle('*' + self.file_name)
         self.chapter_names = get_all_chapter_name(self.get_lines())
+        self.toc.update(self.chapter_names)
         self.is_modified = True
 
     def get_lines(self) ->list:
