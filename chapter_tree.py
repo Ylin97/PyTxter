@@ -76,6 +76,7 @@ if __name__ == '__main__':
                   '第二章 继续': 5,
                   '第三章 觉醒': 10}
     app = QApplication(sys.argv)
-    tree = TOC(chapter_names=chap_names)
+    tree = TOC()
+    tree.update(chap_names)
     tree.show()
     sys.exit(app.exec_())
