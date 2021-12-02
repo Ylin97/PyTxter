@@ -11,7 +11,7 @@ import configparser
 from PyQt5.QtCore import Qt, QRect, QSize, QTextCodec
 from PyQt5.QtGui import QColor, QIcon, QKeySequence, QFont, QPainter, QTextCursor, QTextFormat
 from PyQt5.QtWidgets import QApplication, QBoxLayout, QDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMainWindow,\
-    QPlainTextEdit, QMessageBox, QFontDialog, QPushButton, QAction, QFileDialog, QTextEdit, QVBoxLayout, QWidget
+    QPlainTextEdit, QMessageBox, QFontDialog, QPushButton, QAction, QFileDialog, QSplitter, QTextEdit, QVBoxLayout, QWidget
 # from tools import *
 from qcodeeditor import QCodeEditor
 from format import *
@@ -51,14 +51,23 @@ class MainWindow(QMainWindow):
         # 初始化主界面
         # self.text = QPlainTextEdit()             # 定义一个文本编辑器
         self.text = QCodeEditor()                  # 定义一个编辑器
-        # self.toc = TOC(self, self.chapter_names)   # 定义一个侧边栏
+        self.toc = TOC(self, self.chapter_names)   # 定义一个侧边栏
         # self.setFixedSize
 
-        # mainlayout = QHBoxLayout()            # 定义水平Box布局
+        mainlayout = QHBoxLayout()            # 定义水平Box布局
         # mainlayout.addWidget(self.toc)
         # mainlayout.addWidget(self.text)
 
-        self.setCentralWidget(self.text)
+        splitter = QSplitter(Qt.Horizontal)
+        splitter.addWidget(self.toc)
+        splitter.addWidget(self.text)
+        mainlayout.addWidget(splitter)
+
+        mainwidget = QWidget()
+        mainwidget.setLayout(mainlayout)
+
+        # self.setCentralWidget(self.text)
+        self.setCentralWidget(mainwidget)
         # self.setCentralWidget(QWidget().setLayout(mainlayout))
         # 载入配置信息
         self.config = Config(self, self.text)
