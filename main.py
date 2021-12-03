@@ -1,12 +1,15 @@
-#!/usr/bin/python3
+## !/usr/bin/python3
 # _*_ coding: utf-8 _*_
 
 import sys
 
-
-def run():
-    pass
+from PyQt5.QtWidgets import QApplication
+from mainwindow import MainWindow
 
 
 if __name__ == "__main__":
-    sys.exit(run())
+    app = QApplication(sys.argv)
+    app.setApplicationName('文本编辑器')
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec_())

@@ -5,7 +5,7 @@
 import sys
 import copy
 import time
-import ctypes
+# import ctypes
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCloseEvent, QIcon, QTextCursor
@@ -164,7 +164,7 @@ class MainWindow(QMainWindow):
         """打开文件"""
         if self.is_modified:
             self.save_triggered(dialog=True)
-        path = QFileDialog.getOpenFileName(self, '打开文件')[0]
+        path = QFileDialog.getOpenFileName(self, '打开文件', '', "文本文件(*.txt;*.text)")[0]
         self.file_name = str(path).split('/')[-1]
         # print(file_name)
         if path:
@@ -213,7 +213,7 @@ class MainWindow(QMainWindow):
 
     def save_as_triggered(self):
         """另存为"""
-        path = QFileDialog.getSaveFileName(self, '另存为')[0]
+        path = QFileDialog.getSaveFileName(self, '另存为','', "文本文件(*.txt;*.text)")[0]
         if path:
             with open(path, 'w', encoding='utf-8') as fw:
                 fw.write(self.editor.toPlainText())
