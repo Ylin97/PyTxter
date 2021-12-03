@@ -1,3 +1,4 @@
 *.txt
 .idea/
 *.py[cod]
+tempCodeRunnerFile*.py
