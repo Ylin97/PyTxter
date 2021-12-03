@@ -650,6 +650,11 @@ class MainWindow(QMainWindow):
         self.show_statusbar_msg()
         self.is_modified = False
 
+    def update_toc_triggered(self):
+        """更新目录"""
+        self.chapter_names = get_all_chapter_name(self.get_lines())
+        self.toc.update(self.chapter_names)
+
     """----------------格式菜单-------------------
     # DATE: 2021/11/25
     # Author: yalin
@@ -738,6 +743,7 @@ class MainWindow(QMainWindow):
         toolbar.addAction(QIcon('icons/click2format.svg'), '一键格式化', self.click2format_triggered)
         toolbar.addSeparator()
         toolbar.addAction(QIcon('icons/reset64.png'), '还原文件内容', self.recovery2origin)
+        toolbar.addAction(QIcon('icons/update_toc.svg'), '更新目录', self.update_toc_triggered)
         
 
     """--------------辅助方法-------------------
@@ -764,15 +770,15 @@ class MainWindow(QMainWindow):
         self.editor.selectAll()
         self.editor.insertPlainText(text)
 
-    def update_toc(self):
-        """更新目录查询循环"""
-        last_change_time = 0
-        while self.is_working:
-            current_time = int(time.time())
-            if 0 == last_change_time or 2 < (current_time - last_change_time) % 8 < 6:
-                self.chapter_names = get_all_chapter_name(self.get_lines())
-                self.toc.update(self.chapter_names)
-                last_change_time = current_time
+    # def update_toc(self):
+    #     """更新目录查询循环"""
+    #     last_change_time = 0
+    #     while self.is_working:
+    #         current_time = int(time.time())
+    #         if 0 == last_change_time or 2 < (current_time - last_change_time) % 8 < 6:
+    #             self.chapter_names = get_all_chapter_name(self.get_lines())
+    #             self.toc.update(self.chapter_names)
+    #             last_change_time = current_time
 
     def dialog_closeEvent(self, a0: QCloseEvent) -> None:
         "对话框关闭事件"
