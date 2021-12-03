@@ -11,7 +11,7 @@ import configparser
 from PyQt5.QtGui import QFont
 
 from qcodeeditor import QCodeEditor
-from ui3 import MainWindow
+# from ui3 import MainWindow
 
 
 # 常量
@@ -20,7 +20,7 @@ CONFIG_FILE_PATH = "notepad.ini"
 
 class Config:
     """配置类"""
-    def __init__(self, main_window: MainWindow, text_obj: QCodeEditor) -> None:
+    def __init__(self, main_window, text_obj: QCodeEditor) -> None:
         self.editor = text_obj
         self.window = main_window
         self.config = configparser.ConfigParser()
