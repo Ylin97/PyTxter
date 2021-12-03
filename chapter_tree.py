@@ -58,10 +58,10 @@ class TOC(QWidget):
     def update(self, chapter_names: dict):
         """更新目录"""
         self.chapter_names = chapter_names
+        self.delete_all_item()
         if not self.chapter_names:
             return
         # self.tree.selectAll()
-        self.delete_all_item()
         for chapter_name in self.chapter_names.keys():
             self.add_item(chapter_name)
 

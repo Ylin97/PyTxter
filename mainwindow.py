@@ -154,8 +154,10 @@ class MainWindow(QMainWindow):
         self.file_name = 'Untitled.txt'
         self.file_path = './Untitled.txt'
         self.editor_origin = ''
+        self.chapter_names = {}
         self.setWindowTitle(self.file_name)
         # self.editor.document().setModified(False)
+        self.toc.update(self.chapter_names)
         self.is_modified = False
         self.statusBar().showMessage(f'新建文件 - {self.file_name}', 2000)
         self.show_statusbar_msg()
@@ -179,6 +181,7 @@ class MainWindow(QMainWindow):
             self.setWindowTitle(self.file_name)
             self.file_path = path
             self.chapter_names = get_all_chapter_name(self.get_lines())
+            self.toc.update(self.chapter_names)
             self.show_statusbar_msg()
 
     def save_triggered(self, dialog=False):
