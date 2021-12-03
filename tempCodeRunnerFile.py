@@ -1,2 +1,2 @@
-otepad")
-# QTextCodec.setCodecForLocale(QTextCodec.codecForName("utf-8"))
+cursor = self.editor.textCursor()
+            # index = cursor.anchor()

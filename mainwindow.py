@@ -8,7 +8,7 @@ import time
 # import ctypes
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QCloseEvent, QIcon, QTextCursor
+from PyQt5.QtGui import QCloseEvent, QIcon, QKeyEvent, QTextCursor
 from PyQt5.QtWidgets import QApplication, QBoxLayout, QDialog, QGridLayout, QHBoxLayout,\
     QLabel, QLineEdit, QMainWindow, QPlainTextEdit, QMessageBox, QFontDialog,\
     QPushButton, QFileDialog, QSplitter, QWidget
@@ -47,6 +47,9 @@ class MainWindow(QMainWindow):
         # self.editor = QPlainTextEdit()         # 定义一个文本编辑器
         self.editor = QCodeEditor()              # 定义一个编辑器
         self.toc = TOC(self)                     # 定义一个侧边栏
+        
+        # 重写 QCodeEditor 的 keyPressEvent 事件处理
+        self.editor.keyPressEvent = self.editor_keyPressEvent  
 
         mainlayout = QHBoxLayout()               # 定义水平Box布局
         # mainlayout.addWidget(self.toc)
@@ -93,8 +96,18 @@ class MainWindow(QMainWindow):
         self.editor.textChanged.connect(self.text_changed)  # 实时监控编辑区内容是否发生更改
         self.editor.textChanged.connect(self.find_enable) 
         self.editor.textChanged.connect(self.reset_search_content)
-
         # self.show()
+
+    def editor_keyPressEvent(self, a0: QKeyEvent) -> None:
+        key = a0.key()
+        if Qt.Key_Return == key:
+            # cursor = self.editor.textCursor()
+            # index = cursor.anchor()
+            self.editor.insertPlainText('\n')
+            self.chapter_names = get_all_chapter_name(self.get_lines())
+            self.toc.update(self.chapter_names)
+        else:
+            QPlainTextEdit.keyPressEvent(self.editor, a0)
 
     def closeEvent(self, a0) -> None:
         """关闭事件"""
@@ -690,11 +703,11 @@ class MainWindow(QMainWindow):
     def text_changed(self):
         """如果编辑区内容发生更改，则标题栏显示*号，同时更新章节名记录"""
         self.setWindowTitle('*' + self.file_name)
-        current_time = int(time.time())
-        if 0 == self.last_change_time or 1 < (current_time - self.last_change_time) % 8 < 5:
-            self.chapter_names = get_all_chapter_name(self.get_lines())
-            self.toc.update(self.chapter_names)
-            self.last_change_time = current_time
+        # current_time = int(time.time())
+        # if 0 == self.last_change_time or 1 < (current_time - self.last_change_time) % 8 < 5:
+        #     self.chapter_names = get_all_chapter_name(self.get_lines())
+        #     self.toc.update(self.chapter_names)
+        #     self.last_change_time = current_time
         self.is_modified = True
 
     def get_lines(self) ->list:
