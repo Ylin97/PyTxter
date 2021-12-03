@@ -641,7 +641,7 @@ class MainWindow(QMainWindow):
                     <p>likui911: <a href="https://github.com/likui911/notepad_pyqt5">https://github.com/likui911/notepad_pyqt5</a></p>
                     <p>Aloe_n: <a href="https://www.cnblogs.com/aloe-n/p/8175757.html">https://www.cnblogs.com/aloe-n/p/8175757.html</a></p>
                     """
-        QMessageBox.about(window, '关于', about_text)
+        QMessageBox.about(self, '关于', about_text)
 
     def feedback(self):
         """反馈"""
@@ -649,7 +649,7 @@ class MainWindow(QMainWindow):
                 <p>请前往本项目github地址进行反馈:</p>
                 <p><a href="https://github.com/Ylin97/txtbook-editor">https://github.com/Ylin97/txtbook-editor</a></p>
                """
-        QMessageBox.about(window, '反馈', feedback_text)
+        QMessageBox.about(self, '反馈', feedback_text)
 
     """--------------工具栏--------------------
     # DATA：2021/11/26 22:00
