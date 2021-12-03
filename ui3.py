@@ -630,9 +630,10 @@ class MainWindow(QMainWindow):
         # self.about()
         menu = self.menuBar().addMenu("帮助(&H)")
         menu.addAction("关于", self.about_triggered)
+        menu.addAction("反馈", self.feedback)
 
     def about_triggered(self):
-        """关于会话"""
+        """关于"""
         about_text = """
                     <h2 align="center">这是一个txt小说编辑器</h2><center>版本：0.01 beta</center>
                     <p>by yalin <a href="https://github.com/Ylin97/txtbook-editor">https://github.com/Ylin97/txtbook-editor</a></p>
@@ -641,6 +642,14 @@ class MainWindow(QMainWindow):
                     <p>Aloe_n: <a href="https://www.cnblogs.com/aloe-n/p/8175757.html">https://www.cnblogs.com/aloe-n/p/8175757.html</a></p>
                     """
         QMessageBox.about(window, '关于', about_text)
+
+    def feedback(self):
+        """反馈"""
+        feedback_text = """
+                <p>请前往本项目github地址进行反馈:</p>
+                <p><a href="https://github.com/Ylin97/txtbook-editor">https://github.com/Ylin97/txtbook-editor</a></p>
+               """
+        QMessageBox.about(window, '反馈', feedback_text)
 
     """--------------工具栏--------------------
     # DATA：2021/11/26 22:00
