@@ -1,9 +1,18 @@
+# coding=utf-8
+
+"""
+# This is a text editor that is a subclass created from PyQt5.QtWidgets.QPlainTextEdit.
+# This editor supports to display line number and working line highlight.
+# Ref: https://stackoverflow.com/questions/40386194/create-text-area-textedit-with-line-number-in-pyqt
+"""
+
 from PyQt5.QtCore import Qt, QRect, QSize
 from PyQt5.QtWidgets import QWidget, QPlainTextEdit, QTextEdit
 from PyQt5.QtGui import QColor, QFont, QPainter, QTextFormat
 
 
 class QCodeEditor(QPlainTextEdit):
+    """带行号和行高亮的编辑器类, 子类自QPlainTextEdit"""
     def __init__(self, parent=None):
         super().__init__(parent)
         self.lineNumberArea = QLineNumberArea(self)
