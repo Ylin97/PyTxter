@@ -100,7 +100,7 @@ def punction_replace(lines: list, num: int, lang: int) ->list:
     return lines
 
 
-def auto_format(lines: list) ->str:
+def auto_format(lines: list, para_bound=None) ->str:
     """自动格式化"""
     global result_text
     result_text = ''
@@ -122,7 +122,7 @@ def auto_format(lines: list) ->str:
         # while text_str1.isspace():
         text_str2 = line
         text_str1, text_str2 = deal_chapter_name(text_str1, text_str2)
-        text_str1 = deal_line(text_str1, text_str2)
+        text_str1 = deal_line(text_str1, text_str2, para_bound)
         # 写入最后一行
     if text_str1:
         result_text += HEAD_SPACE + text_str1 + '\n'
@@ -130,7 +130,7 @@ def auto_format(lines: list) ->str:
     return result_text
 
 
-def deal_line(text_str1, text_str2):
+def deal_line(text_str1, text_str2, para_bound=None):
     """行合并和段落拆分"""
     global result_text
 
@@ -157,7 +157,10 @@ def deal_line(text_str1, text_str2):
         else:
             text_str1 += text_str2
 
-        return split_paragraph(text_str1)
+        if para_bound:
+            return split_paragraph(text_str1, para_bound)
+        else:
+            return text_str1
 
 
 def deal_chapter_name(text_str1, text_str2, ishead=False):
@@ -213,12 +216,12 @@ def write_chapter_name(chapter_name, ishead=False):
     result_text += chapter_name + '\n'
 
 
-def split_paragraph(text_str):
+def split_paragraph(text_str, para_bound):
     """将长度超过100的段落拆分并写入文件"""
     global result_text
     temp_str = ""
     len_text_str = len(text_str)
-    if len_text_str <= 100:
+    if len_text_str <= para_bound:
         return text_str
     else:
         count = 0
@@ -234,7 +237,7 @@ def split_paragraph(text_str):
                     and re.match(re_punctuations2, text_str[count]):
                 temp_str += st
             # 处理可能的分段符号
-            elif re.match(re_punctuations1, st) and len(temp_str) > 100:
+            elif re.match(re_punctuations1, st) and len(temp_str) > para_bound:
                 if count == len_text_str and re.match(re_punctuations3, st):
                     # new_file.write('    ' + temp_str + st + '\n')
                     result_text += HEAD_SPACE + temp_str + st + '\n'

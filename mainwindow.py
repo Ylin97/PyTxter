@@ -206,7 +206,7 @@ class MainWindow(QMainWindow):
             answer = QMessageBox.question(self, '关闭文件', '文件已修改，关闭前是否保存文件？',
                                           QMessageBox.Yes | QMessageBox.No)
             # print(answer)
-            if answer & QMessageBox.Save:
+            if answer & QMessageBox.Yes:
                 self.save_triggered()
             else:
                 # self.editor.document().setModified(False)
@@ -311,7 +311,53 @@ class MainWindow(QMainWindow):
 
     def click2format_triggered(self):
         """一键格式化"""
-        text = auto_format(self.get_lines())
+        # text = auto_format(self.get_lines())
+        # # self.editor.clear()
+        # # self.editor.setPlainText(text)
+        # self.update_edit_content(text)
+        # self.show_statusbar_msg()
+        # self.is_modified = True
+        answer = QMessageBox.question(self, '强制分段确定', '是否强制分段？',
+                                          QMessageBox.Yes | QMessageBox.No)
+        if answer & QMessageBox.Yes:
+            self.paragraph_bound_dialog()
+        else:
+            self.do_click2format_triggered()
+
+    def paragraph_bound_dialog(self):
+        """段落界限设置对话框"""
+        self.paragraph_dialog = QDialog(self)
+        self.paragraph_dialog.closeEvent = self.dialog_closeEvent   # 重写对话框关闭事件
+        self.paragraph_dialog.setWindowTitle('设置分段界限')
+        bound_label = QLabel('界限：')
+        self.bound_qle = QLineEdit('100')
+        bound_label.setBuddy(self.bound_qle)
+        confirm_btn = QPushButton('确定')
+        confirm_btn.setDefault(True)
+
+        layout = QBoxLayout(QBoxLayout.LeftToRight)
+        layout.addWidget(bound_label)
+        layout.addWidget(self.bound_qle)
+        layout.addWidget(confirm_btn)
+
+        confirm_btn.clicked.connect(lambda: self.do_click2format_triggered(para=True))
+        self.paragraph_dialog.setLayout(layout)
+        self.paragraph_dialog.show()
+
+    def do_click2format_triggered(self, para=False):
+        """一键格式化处理"""
+        if para:
+            para_bound = int(self.bound_qle.text())
+            if para_bound < 60:
+                QMessageBox.warning(self, '警告', '分段界限太小，请输入不小于60的值！', QMessageBox.Ok)
+                return
+            elif para_bound > 200:
+                QMessageBox.warning(self, '警告', '分段界限太大，请输入不大于200的值！', QMessageBox.Ok)
+                return
+            self.paragraph_dialog.close()
+        else:
+            para_bound = None
+        text = auto_format(self.get_lines(), para_bound)
         # self.editor.clear()
         # self.editor.setPlainText(text)
         self.update_edit_content(text)
