@@ -550,14 +550,14 @@ class MainWindow(QMainWindow):
         start    = cursor.anchor()
         text     = self.search_qle.text()
         text_len = len(text)
-        context  = self.editor.toPlainText()
+        # context  = self.editor.toPlainText()
         # index = context.find(text, start)
         index    = self.search_triggered(text)
         sender   = self.sender()
         # 如果sender是替换按钮，替换选中文字
         if sender is self.replace_button:
             if text == cursor.selectedText():
-                position = cursor.anchor()
+                # position = cursor.anchor()
                 cursor.removeSelectedText()
                 replace_text = self.replace_content.text()
                 cursor.insertText(replace_text)
@@ -566,8 +566,7 @@ class MainWindow(QMainWindow):
                 self.is_modified = True
                 return
         if -1 == index:
-            QMessageBox.information(
-                self.replace_dialog, '记事本', '找不到\"%s\"' % text)
+            QMessageBox.information(self, '记事本', '找不到\"%s\"' % text)
         else:
             start = index
             cursor = self.editor.textCursor()
