@@ -18,7 +18,7 @@ if __name__ == "__main__":
     translator.load('resource/qt_%s.qm' % locale)
     # 切换语言，主要针对系统窗口如字体选择
     app.installTranslator(translator)
-    app.setApplicationName('文本编辑器')
+    app.setApplicationName('PyTxter')
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())
