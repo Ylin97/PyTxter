@@ -1,6 +1,9 @@
 import re
+import math
 
 from chardet.universaldetector import UniversalDetector
+
+from progressbar import ProgressBar
 
 
 # 常量
@@ -105,6 +108,8 @@ def auto_format(lines: list, para_bound=None) ->str:
     global result_text
     result_text = ''
     tmp = ''
+    progress_bar = ProgressBar()
+
     for item in chapter_name_normalize(correct_punctuation(lines)):
         tmp += item
     lines = tmp.split('\n')
@@ -115,8 +120,14 @@ def auto_format(lines: list, para_bound=None) ->str:
     while text_str1.isspace():
         text_str1 = lines[pos]
         pos += 1
+
+    new_lines = lines[pos:]
+    length = len(new_lines) + 1
     text_str1 = deal_chapter_name("", text_str1, True)[1].strip()
-    for line in lines[pos:]:
+    for num, line in enumerate(new_lines):
+        # 更新进度条
+        progress_bar.set_value(int((num / length) * 100))
+
         if line.isspace():
             continue
         # while text_str1.isspace():
@@ -126,7 +137,7 @@ def auto_format(lines: list, para_bound=None) ->str:
         # 写入最后一行
     if text_str1:
         result_text += HEAD_SPACE + text_str1 + '\n'
-    
+    progress_bar.close()
     return result_text
 
 
