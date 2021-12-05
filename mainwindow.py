@@ -701,7 +701,7 @@ class MainWindow(QMainWindow):
         """关于"""
         about_text = """
                     <h2 align="center">这是一个txt小说编辑器</h2><center>版本：0.01 beta</center>
-                    <p>by Ylin97 <a href="https://github.com/Ylin97/PyTxter">https://github.com/Ylin97/txtbook-editor</a></p>
+                    <p>by Ylin97 <a href="https://github.com/Ylin97/PyTxter">https://github.com/Ylin97/PyTxter</a></p>
                     <h3>感谢以下作者：</h3>
                     <p>likui911: <a href="https://github.com/likui911/notepad_pyqt5">https://github.com/likui911/notepad_pyqt5</a></p>
                     <p>Aloe_n: <a href="https://www.cnblogs.com/aloe-n/p/8175757.html">https://www.cnblogs.com/aloe-n/p/8175757.html</a></p>
