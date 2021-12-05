@@ -17,7 +17,7 @@
 
 一键格式化功能演示：   
 
-![click2format](https://ylin-typora01.oss-cn-shenzhen.aliyuncs.com/images/一键格式化演示2.gif)
+![click2format](https://ylin-typora01.oss-cn-shenzhen.aliyuncs.com/images/一键格式化演示8.gif)
 
 ### 清除空白行  
 顾名思义，就是清除文本中的空白行。   
