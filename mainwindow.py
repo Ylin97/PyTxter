@@ -4,7 +4,6 @@
 
 import sys
 import copy
-import time
 # import ctypes
 
 from PyQt5.QtCore import Qt
@@ -134,7 +133,7 @@ class MainWindow(QMainWindow):
 
     """---------------文件菜单-------------------
     # DATE: 2021/11/14 Sun
-    # Author: Yalin
+    # Author: Ylin97
     # History: Create 'File' menu
     """
 
@@ -261,7 +260,7 @@ class MainWindow(QMainWindow):
 
     """---------------编辑菜单-------------------
     # DATE: 2021/11/15 Mon
-    # Author: Yalin
+    # Author: Ylin97
     # History: Create 'Edit' menu
     """
 
@@ -657,7 +656,7 @@ class MainWindow(QMainWindow):
 
     """----------------格式菜单-------------------
     # DATE: 2021/11/25
-    # Author: yalin
+    # Author: Ylin97
     # History: add format_menu
     """
     def create_format_menu(self):
@@ -702,7 +701,7 @@ class MainWindow(QMainWindow):
         """关于"""
         about_text = """
                     <h2 align="center">这是一个txt小说编辑器</h2><center>版本：0.01 beta</center>
-                    <p>by yalin <a href="https://github.com/Ylin97/txtbook-editor">https://github.com/Ylin97/txtbook-editor</a></p>
+                    <p>by Ylin97 <a href="https://github.com/Ylin97/PyTxter">https://github.com/Ylin97/txtbook-editor</a></p>
                     <h3>感谢以下作者：</h3>
                     <p>likui911: <a href="https://github.com/likui911/notepad_pyqt5">https://github.com/likui911/notepad_pyqt5</a></p>
                     <p>Aloe_n: <a href="https://www.cnblogs.com/aloe-n/p/8175757.html">https://www.cnblogs.com/aloe-n/p/8175757.html</a></p>
@@ -713,13 +712,13 @@ class MainWindow(QMainWindow):
         """反馈"""
         feedback_text = """
                 <p>请前往本项目github地址进行反馈:</p>
-                <p><a href="https://github.com/Ylin97/txtbook-editor">https://github.com/Ylin97/txtbook-editor</a></p>
+                <p><a href="https://github.com/Ylin97/PyTxter">https://github.com/Ylin97/PyTxter</a></p>
                """
         QMessageBox.about(self, '反馈', feedback_text)
 
     """--------------工具栏--------------------
     # DATA：2021/11/26 22:00
-    # Author: yalin
+    # Author: Ylin97
     # History: create toolbar
     """
     def create_toolbar(self):
@@ -748,7 +747,7 @@ class MainWindow(QMainWindow):
 
     """--------------辅助方法-------------------
     # DATE: 2021/11/25
-    # Author: yalin
+    # Author: Ylin97
     # History: add show_statusbar_msg function
     """
     def text_changed(self):

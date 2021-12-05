@@ -3,11 +3,10 @@
 # 开发时间 ：2020-09-08 10:20
 # 文件名称 ：Qt_Processbar.py
 # 开发工具 ：Python 3.7 + Pycharm IDE
- 
-from PyQt5.QtWidgets import QApplication, QWidget, QDialog, QLabel, QLineEdit, QProgressBar, \
-    QPushButton, QVBoxLayout, QHBoxLayout, QGridLayout, QDialogButtonBox
-from PyQt5.QtCore import Qt, QBasicTimer, QThread,QRect
 import sys
+ 
+from PyQt5.QtWidgets import QApplication,  QDialog, QProgressBar
+from PyQt5.QtCore import QRect
  
  
 class ProgressBar(QDialog):

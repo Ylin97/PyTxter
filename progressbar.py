@@ -1,6 +1,6 @@
 import sys
-from PyQt5.QtCore import QBasicTimer, QRect, QTimerEvent, Qt
-from PyQt5.QtWidgets import QApplication, QDesktopWidget, QDialog, QHBoxLayout, QLayout, QPushButton, QVBoxLayout, QWidget, QProgressBar
+from PyQt5.QtCore import QRect
+from PyQt5.QtWidgets import QApplication, QDialog, QProgressBar
 
 
 class ProgressBar(QDialog):

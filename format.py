@@ -1,6 +1,4 @@
 import re
-import math
-
 from chardet.universaldetector import UniversalDetector
 
 from progressbar import ProgressBar
