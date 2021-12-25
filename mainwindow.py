@@ -459,7 +459,7 @@ class MainWindow(QMainWindow):
             key_word: 将要搜索的关键字
         Return:
             start: 要替换字符串的在编辑区文本中的开始位置，
-                   -1 表示未找到， -2 表示为输入关键字
+                   -1 表示未找到， -2 表示为输入关键字, -3 表示找到文件末尾
         """
         # print('查找')
         start = -1
@@ -495,6 +495,7 @@ class MainWindow(QMainWindow):
                     self.search_count = 0
                     self.search_current = 0
                     self.search_triggered()
+                start = -3
         self.editor.setFocus()
         self.statusBar().showMessage("匹配[{}/{}]".format(self.search_current, self.search_count))
         return start
@@ -519,6 +520,7 @@ class MainWindow(QMainWindow):
         self.replace_button.setEnabled(False)
         self.replace_all_button.setEnabled(False)
 
+        # self.find_button.clicked.connect(self.search_triggered)
         self.find_button.clicked.connect(self.replace_text)
         self.replace_button.clicked.connect(self.replace_text)
         self.replace_all_button.clicked.connect(self.replace_all)
@@ -561,21 +563,23 @@ class MainWindow(QMainWindow):
                 replace_text = self.replace_content.text()
                 cursor.insertText(replace_text)
                 # 替换文字后要重新搜索，这个时候cursor还未修改
-                self.replace_text()
+                # self.replace_text()
+                self.search_triggered(text)
                 self.is_modified = True
                 return
         if -1 == index:
             QMessageBox.information(self, '记事本', '找不到\"%s\"' % text)
         else:
-            start = index
-            cursor = self.editor.textCursor()
-            cursor.clearSelection()
-            cursor.movePosition(QTextCursor.Start, QTextCursor.MoveAnchor)
-            cursor.movePosition(QTextCursor.Right, QTextCursor.MoveAnchor, start + text_len)
-            cursor.movePosition(QTextCursor.Left, QTextCursor.KeepAnchor, text_len)
-            cursor.selectedText()
-            self.editor.setTextCursor(cursor)
-            self.is_modified = True
+            # start = index
+            # # cursor = self.editor.textCursor()
+            # cursor.clearSelection()
+            # cursor.movePosition(QTextCursor.Start, QTextCursor.MoveAnchor)
+            # cursor.movePosition(QTextCursor.Right, QTextCursor.MoveAnchor, start + text_len)
+            # cursor.movePosition(QTextCursor.Left, QTextCursor.KeepAnchor, text_len)
+            # cursor.selectedText()
+            # self.editor.setTextCursor(cursor)
+            # self.is_modified = True
+            pass
 
     def replace_all(self):
         context       = self.editor.toPlainText()
