@@ -214,7 +214,7 @@ class MainWindow(QMainWindow):
 
         if not self.is_modified:
             # print('文件未修改，不需要保存！')
-            self.statusBar().showMessage("文件未修改，不需要保存！", 2000)
+            self.statusBar().showMessage("文件未修改，不需要保存!", 2000)
         else:
             with open(self.file_path, 'w', encoding=self.file_codec) as fw:
                 fw.write(self.editor.toPlainText())
@@ -222,7 +222,7 @@ class MainWindow(QMainWindow):
             self.is_modified = False
             # print(f'文件: {self.file_path}\t保存成功！')
             self.setWindowTitle(self.file_name)
-            msg1 = f'文件: {self.file_name}\t保存成功！'
+            msg1 = f'文件: {self.file_name}\t保存成功!'
             self.statusBar().showMessage(msg1, 2000)
             self.show_statusbar_msg()
 
@@ -232,7 +232,7 @@ class MainWindow(QMainWindow):
         if path:
             with open(path, 'w', encoding='utf-8') as fw:
                 fw.write(self.editor.toPlainText())
-                msg1 = f'文件: {self.file_name}\t另存成功！'
+                msg1 = f'文件: {self.file_name}\t另存成功!'
                 self.statusBar().showMessage(msg1, 2000)
                 self.show_statusbar_msg()
 
@@ -242,7 +242,7 @@ class MainWindow(QMainWindow):
         with open(self.file_path, 'w', encoding='utf-8') as fw:
             fw.write(self.editor.toPlainText())
             self.setWindowTitle(self.file_name)
-            msg1 = f'文件: {self.file_name}\t以 utf-8 编码保存成功！'
+            msg1 = f'文件: {self.file_name}\t以 utf-8 编码保存成功!'
             self.statusBar().showMessage(msg1, 2000)
             self.show_statusbar_msg()
             self.is_modified = False
@@ -253,7 +253,7 @@ class MainWindow(QMainWindow):
         with open(self.file_path, 'w', encoding='utf-8-sig') as fw:
             fw.write(self.editor.toPlainText())
             self.setWindowTitle(self.file_name)
-            msg1 = f'文件: {self.file_name}\t以 utf-8 with BOM 编码保存成功！'
+            msg1 = f'文件: {self.file_name}\t以 utf-8 with BOM 编码保存成功!'
             self.statusBar().showMessage(msg1, 2000)
             self.show_statusbar_msg()
             self.is_modified = False
@@ -328,7 +328,7 @@ class MainWindow(QMainWindow):
         self.paragraph_dialog = QDialog(self)
         self.paragraph_dialog.closeEvent = self.dialog_closeEvent   # 重写对话框关闭事件
         self.paragraph_dialog.setWindowTitle('设置分段界限')
-        bound_label = QLabel('界限：')
+        bound_label = QLabel('界限:')
         self.bound_qle = QLineEdit('100')
         bound_label.setBuddy(self.bound_qle)
         confirm_btn = QPushButton('确定')
@@ -348,10 +348,10 @@ class MainWindow(QMainWindow):
         if para:
             para_bound = int(self.bound_qle.text())
             if para_bound < 60:
-                QMessageBox.warning(self, '警告', '分段界限太小，请输入不小于60的值！', QMessageBox.Ok)
+                QMessageBox.warning(self, '警告', '分段界限太小，请输入不小于60的值!', QMessageBox.Ok)
                 return
             elif para_bound > 200:
-                QMessageBox.warning(self, '警告', '分段界限太大，请输入不大于200的值！', QMessageBox.Ok)
+                QMessageBox.warning(self, '警告', '分段界限太大，请输入不大于200的值!', QMessageBox.Ok)
                 return
             self.paragraph_dialog.close()
         else:
@@ -374,7 +374,7 @@ class MainWindow(QMainWindow):
                 text += line
         # self.editor.setPlainText(text)
         self.update_edit_content(text)
-        self.statusBar().showMessage("格式化章节名成功！", 2000)
+        self.statusBar().showMessage("格式化章节名成功!", 2000)
         self.show_statusbar_msg()
         self.is_modified = True
 
@@ -388,7 +388,7 @@ class MainWindow(QMainWindow):
         # self.editor.setPlainText(text)
         self.update_edit_content(text)
         # self.editor.document().setModified(True)
-        self.statusBar().showMessage('清除空白行成功！', 2000)
+        self.statusBar().showMessage('清除空白行成功!', 2000)
         self.show_statusbar_msg()
         self.is_modified = True
 
@@ -407,7 +407,7 @@ class MainWindow(QMainWindow):
             text += line
         # self.editor.setPlainText(text)
         self.update_edit_content(text)
-        self.statusBar().showMessage('标点纠正成功！', 2000)
+        self.statusBar().showMessage('标点纠正成功!', 2000)
         self.show_statusbar_msg()
         self.is_modified = True
 
@@ -416,7 +416,7 @@ class MainWindow(QMainWindow):
         find_dialog = QDialog(self)
         find_dialog.closeEvent = self.dialog_closeEvent   # 重写对话框关闭事件
         find_dialog.setWindowTitle('查找')
-        search_label = QLabel('查找：')
+        search_label = QLabel('查找:')
         self.search_qle = QLineEdit(self.last_search)
         search_label.setBuddy(self.search_qle)
         self.search_btn = QPushButton('查找下一个')
@@ -466,7 +466,7 @@ class MainWindow(QMainWindow):
         if not key_word:
             key_word = self.search_qle.text()
             if len(key_word) == 0:  # 没有输入查找关键字
-                QMessageBox.warning(self, '警告', '请输入查找关键字！', QMessageBox.Ok)
+                QMessageBox.warning(self, '警告', '请输入查找关键字!', QMessageBox.Ok)
                 return -2
         if key_word != self.search_key:
             self.search_key = key_word
@@ -481,7 +481,7 @@ class MainWindow(QMainWindow):
                 self.select(start, len(key_word))
                 self.search_current += 1
             else:
-                QMessageBox.warning(self, '查找', '未找到内容！', QMessageBox.Ok)
+                QMessageBox.warning(self, '查找', '未找到内容!', QMessageBox.Ok)
         else:
             if self.search_current < self.search_count:
                 start = self.search_content.find(key_word, self.editor.textCursor().position())
@@ -505,10 +505,10 @@ class MainWindow(QMainWindow):
         replace_dialog = QDialog(self)
         replace_dialog.closeEvent = self.dialog_closeEvent   # 重写对话框关闭事件
         replace_dialog.setWindowTitle('替换')
-        search_label = QLabel('查找内容：')
+        search_label = QLabel('查找内容:')
         self.search_qle = QLineEdit()
         search_label.setBuddy(self.search_qle)
-        replace_label = QLabel('替换为：')
+        replace_label = QLabel('替换为:')
         # 默认替换为空格
         self.replace_content = QLineEdit()
         replace_label.setBuddy(self.replace_content)
@@ -644,7 +644,7 @@ class MainWindow(QMainWindow):
     def recovery2origin(self):
         """还原编辑区到初始态"""
         self.editor.setPlainText(self.editor_origin)
-        self.statusBar().showMessage(f'还原成功！', 2000)
+        self.statusBar().showMessage(f'还原成功!', 2000)
         self.setWindowTitle(f'{self.file_name}')
         self.show_statusbar_msg()
         self.is_modified = False
@@ -700,9 +700,9 @@ class MainWindow(QMainWindow):
     def about_triggered(self):
         """关于"""
         about_text = """
-                    <h2 align="center">这是一个txt小说编辑器</h2><center>版本：0.01 beta</center>
+                    <h2 align="center">这是一个txt小说编辑器</h2><center>版本: 0.01 beta</center>
                     <p>by Ylin97 <a href="https://github.com/Ylin97/PyTxter">https://github.com/Ylin97/PyTxter</a></p>
-                    <h3>感谢以下作者：</h3>
+                    <h3>感谢以下作者:</h3>
                     <p>likui911: <a href="https://github.com/likui911/notepad_pyqt5">https://github.com/likui911/notepad_pyqt5</a></p>
                     <p>Aloe_n: <a href="https://www.cnblogs.com/aloe-n/p/8175757.html">https://www.cnblogs.com/aloe-n/p/8175757.html</a></p>
                     """
@@ -717,7 +717,7 @@ class MainWindow(QMainWindow):
         QMessageBox.about(self, '反馈', feedback_text)
 
     """--------------工具栏--------------------
-    # DATA：2021/11/26 22:00
+    # DATA: 2021/11/26 22:00
     # Author: Ylin97
     # History: create toolbar
     """
@@ -789,7 +789,7 @@ class MainWindow(QMainWindow):
             path  = "..." + self.file_path[-20:]
         else:
             path = self.file_path
-        msg2 = f'打开文件 - {path}  编码：{self.file_codec}'
+        msg2 = f'打开文件 - {path}  编码: {self.file_codec}'
         self.statusBar().showMessage(msg2)
 
 
