@@ -360,6 +360,8 @@ class MainWindow(QMainWindow):
         # self.editor.clear()
         # self.editor.setPlainText(text)
         self.update_edit_content(text)
+        self.chapter_names = get_all_chapter_name(self.get_lines())
+        self.toc.update(self.chapter_names)
         self.show_statusbar_msg()
         self.is_modified = True
 
