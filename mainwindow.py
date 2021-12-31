@@ -453,16 +453,17 @@ class MainWindow(QMainWindow):
         cur.setPosition(start + length, QTextCursor.KeepAnchor)
         self.editor.setTextCursor(cur)
 
-    def search_triggered(self, key_word = None):
+    def search_triggered(self, key_word=None, start=0):
         """查找字符串
         Args:
             key_word: 将要搜索的关键字
+            start: 查找起始位置
         Return:
-            start: 要替换字符串的在编辑区文本中的开始位置，
+            head: 要替换字符串的在编辑区文本中的开始位置，
                    -1 表示未找到， -2 表示为输入关键字, -3 表示找到文件末尾
         """
         # print('查找')
-        start = -1
+        head = -1
         if not key_word:
             key_word = self.search_qle.text()
             if len(key_word) == 0:  # 没有输入查找关键字
@@ -477,16 +478,16 @@ class MainWindow(QMainWindow):
         if not self.search_count:  # 第一次查找
             self.search_count = self.search_content.count(key_word) 
             if self.search_count != 0:
-                start = self.search_content.index(key_word)
-                self.select(start, len(key_word))
-                self.search_current += 1
+                head = self.search_content.index(key_word, start)
+                self.select(head, len(key_word))
+                self.search_current = self.search_content[:start].count(key_word) + 1
             else:
                 QMessageBox.warning(self, '查找', '未找到内容!', QMessageBox.Ok)
         else:
             if self.search_current < self.search_count:
-                start = self.search_content.find(key_word, self.editor.textCursor().position())
-                if start != -1:
-                    self.select(start, len(key_word))
+                head = self.search_content.find(key_word, self.editor.textCursor().position())
+                if head != -1:
+                    self.select(head, len(key_word))
                     self.search_current += 1
             else:
                 answer = QMessageBox.question(self, '查找', '已到达文件结尾，是否从头开始查找？',
@@ -495,10 +496,10 @@ class MainWindow(QMainWindow):
                     self.search_count = 0
                     self.search_current = 0
                     self.search_triggered()
-                start = -3
+                head = -3
         self.editor.setFocus()
         self.statusBar().showMessage("匹配[{}/{}]".format(self.search_current, self.search_count))
-        return start
+        return head
 
     def replace_triggered(self):
         """替换"""
@@ -550,10 +551,10 @@ class MainWindow(QMainWindow):
         cursor   = self.editor.textCursor()
         start    = cursor.anchor()
         text     = self.search_qle.text()
-        text_len = len(text)
+        # text_len = len(text)
         # context  = self.editor.toPlainText()
         # index = context.find(text, start)
-        index    = self.search_triggered(text)
+        index    = self.search_triggered(text, start)
         sender   = self.sender()
         # 如果sender是替换按钮，替换选中文字
         if sender is self.replace_button:
@@ -564,7 +565,7 @@ class MainWindow(QMainWindow):
                 cursor.insertText(replace_text)
                 # 替换文字后要重新搜索，这个时候cursor还未修改
                 # self.replace_text()
-                self.search_triggered(text)
+                self.search_triggered(text, start)
                 self.is_modified = True
                 return
         if -1 == index:
