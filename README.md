@@ -3,11 +3,11 @@
 
 软件截图：  
 
-![image-20211205132308301](https://ylin-typora01.oss-cn-shenzhen.aliyuncs.com/images/image-20211205132308301.png)
+<img src="https://ylin-typora01.oss-cn-shenzhen.aliyuncs.com/images/image-20211205132308301.png" style="zoom:40%">
 
 ## 工具栏介绍  
 
-![image-20211205134129152](https://ylin-typora01.oss-cn-shenzhen.aliyuncs.com/images/image-20211205134129152.png)
+<img src="https://ylin-typora01.oss-cn-shenzhen.aliyuncs.com/images/image-20211205134129152.png" style="zoom:40%">
 
 ## 功能介绍   
 
@@ -17,7 +17,7 @@
 
 一键格式化功能演示：   
 
-![click2format](https://ylin-typora01.oss-cn-shenzhen.aliyuncs.com/images/一键格式化演示8.gif)
+<img src="https://ylin-typora01.oss-cn-shenzhen.aliyuncs.com/images/一键格式化演示8.gif" style="zoom:40%">
 
 ### 清除空白行  
 顾名思义，就是清除文本中的空白行。   
@@ -35,11 +35,11 @@
 
 打开文件和点击目录跳转功能演示：   
 
-![](https://ylin-typora01.oss-cn-shenzhen.aliyuncs.com/images/打开文件和目录跳转.gif)
+<img src="https://ylin-typora01.oss-cn-shenzhen.aliyuncs.com/images/打开文件和目录跳转.gif" style="zoom:40%">
 
 文本格式化功能演示：   
 
-![](https://ylin-typora01.oss-cn-shenzhen.aliyuncs.com/images/格式化功能演示.gif)
+<img src="https://ylin-typora01.oss-cn-shenzhen.aliyuncs.com/images/格式化功能演示.gif" style="zoom:40%">
 
 ## 待完善功能   
 
